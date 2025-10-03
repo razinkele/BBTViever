@@ -1,0 +1,52 @@
+[flake8]
+# Configuration for flake8 linting
+
+# Maximum line length
+max-line-length = 100
+
+# Ignore specific error codes
+ignore =
+    # E203: whitespace before ':'
+    E203,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E501: line too long (black handles this)
+    E501
+
+# Exclude files and directories
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    htmlcov,
+    .env,
+    venv,
+    env,
+    build,
+    dist,
+    *.egg-info
+
+# Maximum complexity
+max-complexity = 12
+
+# Import order style
+import-order-style = google
+
+# Enable specific error codes
+select = E,W,F,C
+
+# Per-file ignores
+per-file-ignores =
+    # Tests can have longer lines and more complex imports
+    tests/*:E402,F401,E501
+    # Configuration files can have longer lines
+    config/*:E501
+
+# Count errors
+count = True
+
+# Show source code for each error
+show-source = True
+
+# Show statistics
+statistics = True
