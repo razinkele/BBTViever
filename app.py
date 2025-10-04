@@ -6,7 +6,6 @@ MARBEFES BBT Database - Marine Biodiversity and Ecosystem Functioning Database f
 import os
 import sys
 import threading
-import time
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -22,19 +21,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "config"))
 # Local imports
 from config import get_config, EMODNET_LAYERS
 from emodnet_viewer.utils.logging_config import setup_logging, get_logger
-
-# Try to import async WMS support (graceful fallback if not available)
-try:
-    from emodnet_viewer.utils.async_wms import (
-        fetch_emodnet_and_helcom,
-        parse_and_filter_layers,
-        ASYNC_AVAILABLE
-    )
-    ASYNC_WMS_SUPPORT = ASYNC_AVAILABLE
-except ImportError as e:
-    ASYNC_WMS_SUPPORT = False
-    logger_temp = get_logger(__name__)
-    logger_temp.info("Async WMS support not available, using synchronous mode")
 
 # Initialize vector support
 try:
@@ -81,10 +67,16 @@ def set_security_headers(response):
 WMS_BASE_URL = config.WMS_BASE_URL
 WMS_VERSION = config.WMS_VERSION
 WMS_TIMEOUT = config.WMS_TIMEOUT
+WMS_CACHE_TIMEOUT = 300  # 5 minutes cache for WMS capabilities
 
 # HELCOM WMS Service Configuration
 HELCOM_WMS_BASE_URL = "https://maps.helcom.fi/arcgis/services/MADS/Pressures/MapServer/WMSServer"
 HELCOM_WMS_VERSION = "1.3.0"
+
+# Layer Filtering Configuration
+CORE_EUROPEAN_LAYER_COUNT = 6  # Number of core EuSeaMap layers to prioritize
+EUROPEAN_LAYER_TERMS = ['eusm2021', 'eusm2019', 'europe', 'substrate', 'confidence', 'annexiMaps', 'ospar']
+CARIBBEAN_EXCLUDE_TERMS = ['carib', 'caribbean']
 
 # Thread safety for vector loading
 _vector_load_lock = threading.Lock()
@@ -148,68 +140,46 @@ def parse_wms_capabilities(xml_content, filter_fn=None):
 
 
 def prioritize_european_layers(wms_layers):
-    """Prioritize European layers and combine with defaults"""
-    if wms_layers:
-        # First, check if any of our preferred European layers exist in WMS
-        preferred_layers = []
-        european_terms = ['eusm2021', 'eusm2019', 'europe', 'substrate', 'confidence', 'annexiMaps', 'ospar']
-
-        # Add European/preferred layers first
-        for wms_layer in wms_layers:
-            name_lower = wms_layer['name'].lower()
-            title_lower = (wms_layer.get('title') or '').lower()
-
-            # Prioritize European layers
-            if any(term in name_lower or term in title_lower for term in european_terms):
-                # Skip Caribbean layers
-                if 'carib' not in name_lower and 'caribbean' not in title_lower:
-                    preferred_layers.append(wms_layer)
-
-        # Add other relevant layers (avoiding duplicates)
-        added_names = {layer['name'] for layer in preferred_layers}
-        other_layers = []
-        for wms_layer in wms_layers:
-            if (wms_layer['name'] not in added_names and
-                'carib' not in wms_layer['name'].lower() and
-                'caribbean' not in (wms_layer.get('title') or '').lower()):
-                other_layers.append(wms_layer)
-
-        # Combine: European layers first, then all others
-        combined_layers = preferred_layers + other_layers
-
-        # Always include our core European EuSeaMap layers at the top
-        core_european_layers = EMODNET_LAYERS[:6] if len(EMODNET_LAYERS) >= 6 else EMODNET_LAYERS
-
-        # Combine: Core European layers first, then discovered layers, avoiding duplicates
-        final_layers = []
-        added_names = set()
-
-        # Add core European layers first
-        for layer in core_european_layers:
-            final_layers.append(layer)
-            added_names.add(layer['name'])
-
-        # Add discovered European layers (avoiding duplicates)
-        for layer in preferred_layers:
-            if layer['name'] not in added_names:
-                final_layers.append(layer)
-                added_names.add(layer['name'])
-
-        # Add all other WMS layers (avoiding duplicates)
-        for layer in other_layers:
-            if layer['name'] not in added_names:
-                final_layers.append(layer)
-                added_names.add(layer['name'])
-
-        logger.info(f"Prioritized {len(final_layers)} layers (European first)")
-        return final_layers
-    else:
-        # No WMS layers found, use defaults
+    """Prioritize European layers and combine with defaults using single-pass algorithm"""
+    if not wms_layers:
         logger.warning("No WMS layers found, using fallback layers")
         return EMODNET_LAYERS
 
+    # Single-pass categorization of WMS layers
+    preferred_layers = []
+    other_layers = []
 
-@cache.memoize(timeout=300)
+    for wms_layer in wms_layers:
+        name_lower = wms_layer['name'].lower()
+        title_lower = (wms_layer.get('title') or '').lower()
+
+        # Skip Caribbean layers entirely
+        if any(term in name_lower or term in title_lower for term in CARIBBEAN_EXCLUDE_TERMS):
+            continue
+
+        # Categorize as European or other
+        if any(term in name_lower or term in title_lower for term in EUROPEAN_LAYER_TERMS):
+            preferred_layers.append(wms_layer)
+        else:
+            other_layers.append(wms_layer)
+
+    # Build final layer list with deduplication
+    core_european_layers = EMODNET_LAYERS[:CORE_EUROPEAN_LAYER_COUNT] if len(EMODNET_LAYERS) >= CORE_EUROPEAN_LAYER_COUNT else EMODNET_LAYERS
+    final_layers = []
+    added_names = set()
+
+    # Priority order: Core European → Discovered European → Other WMS
+    for layer_list in [core_european_layers, preferred_layers, other_layers]:
+        for layer in layer_list:
+            if layer['name'] not in added_names:
+                final_layers.append(layer)
+                added_names.add(layer['name'])
+
+    logger.info(f"Prioritized {len(final_layers)} layers (European first)")
+    return final_layers
+
+
+@cache.memoize(timeout=WMS_CACHE_TIMEOUT)
 def get_available_layers():
     """
     Fetch available WMS layers with caching
@@ -324,6 +294,9 @@ def load_vector_data_on_startup():
 def index():
     """Main page with map viewer"""
     all_layers = get_all_layers()
+    app_root = app.config.get('APPLICATION_ROOT', '')
+    api_base_url = f"{app_root}/api" if app_root else "/api"
+
     return render_template(
         'index.html',
         layers=all_layers["wms_layers"],
@@ -332,6 +305,8 @@ def index():
         vector_support=all_layers["vector_support"],
         WMS_BASE_URL=WMS_BASE_URL,
         HELCOM_WMS_BASE_URL=HELCOM_WMS_BASE_URL,
+        APPLICATION_ROOT=app_root,
+        API_BASE_URL=api_base_url,
     )
 
 

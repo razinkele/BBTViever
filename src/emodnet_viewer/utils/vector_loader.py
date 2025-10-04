@@ -7,6 +7,7 @@ import geopandas as gpd
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
+from collections import OrderedDict
 
 from .logging_config import get_logger
 
@@ -30,12 +31,17 @@ class VectorLayer:
 class VectorLayerLoader:
     """Loader for vector data from GPKG files"""
 
+    # Cache configuration constants
+    MAX_CACHE_SIZE = 50  # Maximum number of GeoDataFrames to cache
+    CACHE_EVICT_SIZE = 10  # Number of items to evict when cache is full
+
     def __init__(self, data_dir: str = "data"):
         self.data_dir = Path(data_dir)
         self.vector_dir = self.data_dir / "vector"
         self.logger = get_logger("vector_loader")
         self.loaded_layers: List[VectorLayer] = []
-        self._gdf_cache: Dict[str, gpd.GeoDataFrame] = {}  # Performance: In-memory GeoDataFrame cache
+        # LRU cache: OrderedDict maintains insertion order for efficient eviction
+        self._gdf_cache: OrderedDict[str, gpd.GeoDataFrame] = OrderedDict()
 
         # Default styles by geometry type
         self.default_styles = {
@@ -124,20 +130,22 @@ class VectorLayerLoader:
         """Load a specific layer from a GPKG file"""
         try:
             # Read the layer using pyogrio engine with force_2d option
+            # This handles Z-coordinate stripping at I/O level (most efficient)
             try:
                 gdf = gpd.read_file(str(gpkg_path), layer=layer_name, engine='pyogrio', force_2d=True)
-            except Exception:
-                # Fallback to fiona engine
+            except Exception as e:
+                # Fallback to fiona engine (doesn't support force_2d, so convert manually)
+                self.logger.debug(f"Pyogrio failed, falling back to fiona: {e}")
                 gdf = gpd.read_file(str(gpkg_path), layer=layer_name, engine='fiona')
+
+                # Only convert if fiona was used AND geometries have Z coords
+                if gdf.geometry.has_z.any():
+                    self.logger.info(f"Converting 3D geometries to 2D for layer {layer_name}")
+                    gdf.geometry = gdf.geometry.apply(lambda geom: self._force_2d(geom) if geom else geom)
 
             if gdf.empty:
                 self.logger.warning(f"Layer {layer_name} in {gpkg_path} is empty")
                 return None
-
-            # Force geometries to 2D if they contain Z coordinates
-            if gdf.geometry.has_z.any():
-                self.logger.info(f"Converting 3D geometries to 2D for layer {layer_name}")
-                gdf.geometry = gdf.geometry.apply(lambda geom: self._force_2d(geom) if geom else geom)
 
             # Ensure the data is in WGS84 for web display
             if gdf.crs and gdf.crs.to_epsg() != 4326:
@@ -258,6 +266,22 @@ class VectorLayerLoader:
         self.logger.info(f"Loaded {len(self.loaded_layers)} vector layers total")
         return self.loaded_layers
 
+    def _evict_cache_entries(self) -> None:
+        """Evict oldest entries from cache when size limit is reached"""
+        if len(self._gdf_cache) >= self.MAX_CACHE_SIZE:
+            # Evict oldest entries (FIFO from OrderedDict)
+            evicted_count = 0
+            for _ in range(self.CACHE_EVICT_SIZE):
+                if self._gdf_cache:
+                    evicted_key = next(iter(self._gdf_cache))
+                    self._gdf_cache.pop(evicted_key)
+                    evicted_count += 1
+
+            self.logger.info(
+                f"Cache eviction: removed {evicted_count} oldest entries "
+                f"(cache size: {len(self._gdf_cache)}/{self.MAX_CACHE_SIZE})"
+            )
+
     def get_vector_layer_geojson(
         self, layer: VectorLayer, simplify_tolerance: Optional[float] = None
     ) -> Dict[str, Any]:
@@ -269,9 +293,16 @@ class VectorLayerLoader:
             if cache_key not in self._gdf_cache:
                 # Cache miss - read from disk
                 self.logger.debug(f"Cache miss for {layer.display_name}, reading from disk")
+
+                # Evict old entries if cache is full
+                self._evict_cache_entries()
+
+                # Load and cache the GeoDataFrame
                 self._gdf_cache[cache_key] = gpd.read_file(layer.file_path, layer=layer.layer_name)
             else:
                 self.logger.debug(f"Cache hit for {layer.display_name}")
+                # Move to end (LRU: mark as recently used)
+                self._gdf_cache.move_to_end(cache_key)
 
             # Work with a copy to avoid cache pollution
             gdf = self._gdf_cache[cache_key].copy()
