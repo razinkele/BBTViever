@@ -1,23 +1,34 @@
 #!/usr/bin/env python3
 """
 Gunicorn configuration for MARBEFES BBT Database
+Deployed at: http://laguna.ku.lt/BBTS/
+
+Optimized configuration with:
+- Environment-based scaling (auto-scaled based on CPU cores)
+- Production security settings
+- Performance tuning for WMS/HELCOM requests (120s timeout)
+- 2-tier caching for vector layers
+- Connection pooling for WMS services
 """
 
 import os
 import multiprocessing
 
-# Server socket
-bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
+# Server socket - bind to localhost only (nginx reverse proxy handles external access)
+bind = f"127.0.0.1:{os.getenv('PORT', '5000')}"
 backlog = 2048
 
-# Worker processes
+# Worker processes - optimized for I/O bound WMS requests
 workers = int(os.getenv('WORKERS', multiprocessing.cpu_count() * 2 + 1))
 worker_class = 'sync'
 worker_connections = 1000
-timeout = int(os.getenv('TIMEOUT', '30'))
-keepalive = int(os.getenv('KEEPALIVE', '2'))
 
-# Restart workers after this many requests, with up to this much jitter
+# Timeouts - increased for WMS GetCapabilities requests
+timeout = int(os.getenv('TIMEOUT', '120'))  # Increased from 30s for WMS operations
+graceful_timeout = int(os.getenv('GRACEFUL_TIMEOUT', '30'))
+keepalive = int(os.getenv('KEEPALIVE', '5'))
+
+# Restart workers to prevent memory leaks
 max_requests = int(os.getenv('MAX_REQUESTS', '1000'))
 max_requests_jitter = int(os.getenv('MAX_REQUESTS_JITTER', '100'))
 
@@ -33,9 +44,16 @@ proc_name = 'marbefes-bbt-database'
 # Server mechanics
 preload_app = True
 daemon = False
+
+# Environment variables passed to workers
 raw_env = [
     'FLASK_ENV=production',
 ]
+
+# Security - limit request sizes
+limit_request_line = 4094
+limit_request_fields = 100
+limit_request_field_size = 8190
 
 # SSL (if needed)
 # keyfile = '/path/to/keyfile'

@@ -47,8 +47,10 @@ A Flask-based web application for visualizing EMODnet (European Marine Observati
 
 ### 🎯 **BBT Navigation**
 - **Quick Navigation**: One-click zoom to specific Broad Belt Transect areas
-- **9 Study Areas**: Archipelago, Balearic, Bay of Gdansk, Gulf of Biscay, Heraklion, Hornsund, Kongsfjord, Lithuanian coastal zone, Sardinia
+- **11 Study Areas**: Archipelago, Balearic, Bay of Gdansk, Gulf of Biscay, Heraklion, Hornsund, Irish Sea, Kongsfjord, Lithuanian coast, North Sea, Sardinia
 - **Smart Zoom**: Automatic layer loading and optimal view extent
+- **Bathymetry Data**: Depth statistics (min/max/avg) for each BBT area
+- **Editable Metadata**: Store and manage BBT-specific research data
 
 ### 🚀 **3D Visualization**
 - **PyDeck Integration**: Advanced 3D visualizations using Deck.gl
@@ -144,6 +146,46 @@ The main interface provides several key areas:
 **Vector Layers (Local GPKG):**
 - Bbts - Merged (6 MultiPolygon features)
 - Bbts - Broad Belt Transects (9 MultiPolygon features)
+
+### BBT Bathymetry Data Management
+
+The application includes tools to manage bathymetry statistics (depth data) for each BBT area.
+
+#### **Quick Update (CSV Method - Recommended)**
+
+1. **Edit the CSV file** with your bathymetry measurements:
+```bash
+nano data/bbt_bathymetry_manual.csv
+```
+
+CSV format:
+```csv
+BBT_Name,Min_Depth_m,Max_Depth_m,Avg_Depth_m,Notes
+Archipelago,0,45.8,22.9,Coastal to shallow shelf waters
+Lithuanian coast,0,35.0,17.5,Shallow Baltic coastal gradient
+```
+
+2. **Convert to JSON** and update the application:
+```bash
+./update_bathymetry_from_csv.sh
+```
+
+3. **Restart the application** - bathymetry data will appear in BBT popups
+
+#### **Advanced: Automated Sampling (Experimental)**
+
+For automated bathymetry data collection from EMODnet WMS service:
+```bash
+# Sample bathymetry data (may take 5-10 minutes)
+./calculate_bathymetry.sh --samples 25
+
+# With verbose logging
+./calculate_bathymetry.sh --verbose --samples 15
+```
+
+**Note:** The automated method is experimental as EMODnet Bathymetry WMS primarily returns visualization data (RGB colors) rather than raw depth measurements. Manual CSV input is recommended for accurate bathymetric data.
+
+📖 **Full Documentation:** See [BATHYMETRY_TOOL.md](BATHYMETRY_TOOL.md) for complete details.
 
 ### Command Line Usage
 
@@ -306,27 +348,35 @@ Returns legend URL for a specific layer.
 
 ```
 EMODNET_PyDeck/
-├── app.py                 # Main Flask application (468 lines)
+├── app.py                          # Main Flask application
 ├── templates/
-│   └── index.html        # Main web interface template (93KB)
+│   └── index.html                 # Main web interface template
 ├── src/
 │   └── emodnet_viewer/
 │       └── utils/
-│           ├── vector_loader.py    # GPKG processing utilities
-│           ├── logging_config.py   # Logging configuration
-│           └── monitoring.py       # Performance monitoring
+│           ├── vector_loader.py         # GPKG processing utilities
+│           ├── bathymetry_calculator.py # Bathymetry data calculator
+│           ├── logging_config.py        # Logging configuration
+│           └── monitoring.py            # Performance monitoring
 ├── data/
-│   └── vector/
-│       └── BBts.gpkg     # Broad Belt Transects data (3.5MB)
+│   ├── vector/
+│   │   └── BBT.gpkg                # Broad Belt Transects data
+│   ├── bbt_bathymetry_manual.csv   # Manual bathymetry data (editable)
+│   └── bbt_bathymetry_stats.json   # Processed bathymetry statistics
+├── scripts/
+│   ├── calculate_bathymetry.py     # Bathymetry sampling tool
+│   └── csv_to_bathymetry_json.py   # CSV to JSON converter
 ├── config/
-│   └── config.py         # Configuration settings
-├── tests/                # Test suite
-├── scripts/              # Utility scripts
-├── docs/                 # Additional documentation
-├── LOGO/                 # Project logos and branding
-├── requirements.txt      # Production dependencies
-├── requirements-dev.txt  # Development dependencies
-└── CLAUDE.md            # AI assistant instructions
+│   └── config.py                   # Configuration settings
+├── tests/                          # Test suite
+├── docs/                           # Additional documentation
+├── LOGO/                           # Project logos and branding
+├── calculate_bathymetry.sh         # Bathymetry sampling wrapper
+├── update_bathymetry_from_csv.sh   # CSV update wrapper
+├── requirements.txt                # Production dependencies
+├── requirements-dev.txt            # Development dependencies
+├── BATHYMETRY_TOOL.md             # Bathymetry tool documentation
+└── CLAUDE.md                      # AI assistant instructions
 ```
 
 ### Architecture

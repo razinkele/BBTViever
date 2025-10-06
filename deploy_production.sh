@@ -129,21 +129,39 @@ SECRET_KEY=$(openssl rand -hex 32)
 FLASK_HOST=127.0.0.1
 FLASK_RUN_PORT=5000
 
+# Application Root (for subpath deployment, e.g., /BBTS)
+APPLICATION_ROOT=
+
 # WMS Configuration
 WMS_BASE_URL=https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms
 WMS_VERSION=1.3.0
 WMS_TIMEOUT=10
 
 # Cache Configuration
-CACHE_TYPE=SimpleCache
-CACHE_DEFAULT_TIMEOUT=300
+CACHE_TYPE=simple
+CACHE_DEFAULT_TIMEOUT=3600
+WMS_CACHE_TIMEOUT=300
+
+# Layer Configuration
+CORE_EUROPEAN_LAYER_COUNT=6
+
+# Vector Data Configuration
+VECTOR_DATA_DIR=data
+VECTOR_SIMPLIFY_TOLERANCE=0.001
+VECTOR_MAX_FEATURES=10000
+ENABLE_VECTOR_SUPPORT=True
 
 # Logging
-LOG_LEVEL=INFO
+LOG_LEVEL=WARNING
 LOG_FILE=logs/marbefes-bbt.log
+LOG_MAX_BYTES=10485760
+LOG_BACKUP_COUNT=5
 
 # Security Headers (enabled in production)
 ENABLE_HSTS=True
+SESSION_COOKIE_SECURE=True
+SESSION_COOKIE_HTTPONLY=True
+SESSION_COOKIE_SAMESITE=Lax
 EOF
 
 # Generate actual secret key
@@ -153,10 +171,45 @@ sed -i "s/SECRET_KEY=.*/SECRET_KEY=${SECRET_KEY}/" "$PROD_DIR/.env"
 echo -e "${GREEN}✓${NC} Environment file created"
 
 ################################################################################
-# Step 4: Create Gunicorn configuration
+# Step 4: Calculate BBT Bathymetry Statistics
 ################################################################################
 
-echo -e "\n${BLUE}[Step 4/7]${NC} Creating Gunicorn configuration..."
+echo -e "\n${BLUE}[Step 4/8]${NC} Calculating BBT bathymetry statistics..."
+
+# Check if bathymetry script exists
+if [ -f "$PROD_DIR/calculate_bathymetry.sh" ]; then
+    echo -e "${BLUE}→${NC} Running bathymetry calculator..."
+
+    # Make script executable
+    chmod +x "$PROD_DIR/calculate_bathymetry.sh"
+    chmod +x "$PROD_DIR/scripts/calculate_bathymetry.py"
+
+    # Run bathymetry calculation (use source environment)
+    source "$PROD_DIR/venv/bin/activate"
+
+    # Run with reduced sample density for faster deployment
+    cd "$PROD_DIR"
+    ./calculate_bathymetry.sh --samples 15 || {
+        echo -e "${YELLOW}⚠  Bathymetry calculation failed, continuing deployment anyway${NC}"
+        echo -e "${YELLOW}   You can run it manually later: cd ${PROD_DIR} && ./calculate_bathymetry.sh${NC}"
+    }
+
+    deactivate
+
+    if [ -f "$PROD_DIR/data/bbt_bathymetry_stats.json" ]; then
+        echo -e "${GREEN}✓${NC} Bathymetry statistics generated"
+    else
+        echo -e "${YELLOW}⚠${NC} Bathymetry statistics not generated (file missing)"
+    fi
+else
+    echo -e "${YELLOW}⚠${NC} Bathymetry calculation script not found, skipping..."
+fi
+
+################################################################################
+# Step 5: Create Gunicorn configuration
+################################################################################
+
+echo -e "\n${BLUE}[Step 5/8]${NC} Creating Gunicorn configuration..."
 
 cat > "$PROD_DIR/gunicorn_config.py" << 'EOF'
 """Gunicorn configuration for MARBEFES BBT Database"""
@@ -203,10 +256,10 @@ EOF
 echo -e "${GREEN}✓${NC} Gunicorn configuration created"
 
 ################################################################################
-# Step 5: Create systemd service
+# Step 6: Create systemd service
 ################################################################################
 
-echo -e "\n${BLUE}[Step 5/7]${NC} Creating systemd service..."
+echo -e "\n${BLUE}[Step 6/8]${NC} Creating systemd service..."
 
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
 [Unit]
@@ -252,10 +305,10 @@ EOF
 echo -e "${GREEN}✓${NC} Systemd service created: ${SERVICE_NAME}.service"
 
 ################################################################################
-# Step 6: Create nginx configuration
+# Step 7: Create nginx configuration
 ################################################################################
 
-echo -e "\n${BLUE}[Step 6/7]${NC} Creating nginx configuration..."
+echo -e "\n${BLUE}[Step 7/8]${NC} Creating nginx configuration..."
 
 # Ensure nginx log directory exists
 mkdir -p /var/log/nginx
@@ -267,6 +320,7 @@ echo -e "${BLUE}→${NC} Nginx log directory created/verified"
 cat > "/etc/nginx/sites-available/${NGINX_SITE}" << 'EOF'
 # MARBEFES BBT Database - Nginx Configuration
 # Production deployment with reverse proxy to Gunicorn
+# Deployed at: http://laguna.ku.lt/BBTS
 
 upstream marbefes_bbt {
     server 127.0.0.1:5000 fail_timeout=0;
@@ -276,10 +330,10 @@ server {
     listen 80;
     listen [::]:80;
 
-    # Update with your actual domain
-    server_name bbt.marbefes.eu www.bbt.marbefes.eu;
+    # Domain configuration - supports laguna.ku.lt and any other domains pointing to this server
+    server_name laguna.ku.lt www.laguna.ku.lt bbt.marbefes.eu www.bbt.marbefes.eu _;
 
-    # For local testing, comment out above and use:
+    # For local testing only:
     # server_name localhost;
 
     # Max upload size
@@ -289,13 +343,18 @@ server {
     access_log /var/log/nginx/marbefes-bbt-access.log;
     error_log /var/log/nginx/marbefes-bbt-error.log;
 
-    # Main application
-    location / {
+    # Main application at /BBTS subpath
+    location /BBTS {
+        # Remove /BBTS prefix before passing to Flask
+        rewrite ^/BBTS(/.*)$ $1 break;
+        rewrite ^/BBTS$ / break;
+
         proxy_pass http://marbefes_bbt;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Script-Name /BBTS;
 
         # WebSocket support (if needed in future)
         proxy_http_version 1.1;
@@ -312,27 +371,32 @@ server {
         proxy_buffer_size 4k;
         proxy_buffers 24 4k;
         proxy_busy_buffers_size 8k;
+
+        # Redirect handling
+        proxy_redirect ~^/(.*)$ /BBTS/$1;
+        proxy_redirect / /BBTS/;
     }
 
-    # Static files - logos
-    location /logo/ {
+    # Static files - logos (served at /BBTS/logo/)
+    location /BBTS/logo/ {
         alias /var/www/marbefes-bbt/LOGO/;
         expires 1y;
         add_header Cache-Control "public, immutable";
         access_log off;
     }
 
-    # Static files - if you have a static directory
-    location /static/ {
+    # Static files - static directory (served at /BBTS/static/)
+    location /BBTS/static/ {
         alias /var/www/marbefes-bbt/static/;
         expires 1y;
         add_header Cache-Control "public, immutable";
         access_log off;
     }
 
-    # Health check endpoint (optional)
-    location /health {
+    # Health check endpoint (optional) - /BBTS/health
+    location /BBTS/health {
         access_log off;
+        rewrite ^/BBTS/health$ /health break;
         proxy_pass http://marbefes_bbt;
     }
 
@@ -361,13 +425,16 @@ server {
 }
 
 # HTTPS configuration (uncomment after obtaining SSL certificate)
+# To get SSL certificate, run:
+#   sudo certbot --nginx -d laguna.ku.lt -d www.laguna.ku.lt
+#
 # server {
 #     listen 443 ssl http2;
 #     listen [::]:443 ssl http2;
-#     server_name bbt.marbefes.eu www.bbt.marbefes.eu;
+#     server_name laguna.ku.lt www.laguna.ku.lt bbt.marbefes.eu www.bbt.marbefes.eu;
 #
-#     ssl_certificate /etc/letsencrypt/live/bbt.marbefes.eu/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/bbt.marbefes.eu/privkey.pem;
+#     ssl_certificate /etc/letsencrypt/live/laguna.ku.lt/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/laguna.ku.lt/privkey.pem;
 #
 #     # SSL configuration
 #     ssl_protocols TLSv1.2 TLSv1.3;
@@ -379,10 +446,12 @@ server {
 #     # HSTS
 #     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 #
-#     # Same location blocks as HTTP
-#     location / {
+#     # Same location blocks as HTTP (with /BBTS prefix)
+#     location /BBTS {
+#         rewrite ^/BBTS(/.*)$ $1 break;
+#         rewrite ^/BBTS$ / break;
 #         proxy_pass http://marbefes_bbt;
-#         # ... (same proxy settings)
+#         # ... (same proxy settings as above)
 #     }
 # }
 
@@ -390,7 +459,7 @@ server {
 # server {
 #     listen 80;
 #     listen [::]:80;
-#     server_name bbt.marbefes.eu www.bbt.marbefes.eu;
+#     server_name laguna.ku.lt www.laguna.ku.lt;
 #     return 301 https://$server_name$request_uri;
 # }
 EOF
@@ -404,10 +473,10 @@ nginx -t
 echo -e "${GREEN}✓${NC} Nginx configuration created and enabled"
 
 ################################################################################
-# Step 7: Set permissions and enable services
+# Step 8: Set permissions and enable services
 ################################################################################
 
-echo -e "\n${BLUE}[Step 7/7]${NC} Setting permissions and enabling services..."
+echo -e "\n${BLUE}[Step 8/8]${NC} Setting permissions and enabling services..."
 
 # Set ownership
 chown -R ${USER}:${GROUP} "$PROD_DIR"
@@ -443,8 +512,9 @@ echo -e "  Service:        ${SERVICE_NAME}.service"
 echo -e "  Nginx Config:   /etc/nginx/sites-available/${NGINX_SITE}"
 echo ""
 echo -e "${BLUE}Access URLs:${NC}"
-echo -e "  Local:          http://localhost"
-echo -e "  Network:        http://$(hostname -I | awk '{print $1}')"
+echo -e "  Production:     ${YELLOW}http://laguna.ku.lt/BBTS/${NC}"
+echo -e "  Local:          http://localhost/BBTS/"
+echo -e "  Network:        http://$(hostname -I | awk '{print $1}')/BBTS/"
 echo ""
 echo -e "${BLUE}Useful Commands:${NC}"
 echo -e "  Status:         ${YELLOW}sudo systemctl status ${SERVICE_NAME}${NC}"
@@ -453,9 +523,9 @@ echo -e "  Restart:        ${YELLOW}sudo systemctl restart ${SERVICE_NAME}${NC}"
 echo -e "  Nginx Logs:     ${YELLOW}sudo tail -f /var/log/nginx/marbefes-bbt-*.log${NC}"
 echo ""
 echo -e "${BLUE}Next Steps:${NC}"
-echo -e "  1. Update domain in nginx config: /etc/nginx/sites-available/${NGINX_SITE}"
-echo -e "  2. Test application: ${YELLOW}curl -I http://localhost${NC}"
-echo -e "  3. Setup SSL: ${YELLOW}sudo certbot --nginx -d your-domain.com${NC}"
+echo -e "  1. Test application: ${YELLOW}curl -I http://laguna.ku.lt/BBTS/${NC}"
+echo -e "  2. Test vector layers: ${YELLOW}curl http://laguna.ku.lt/BBTS/api/vector/layers${NC}"
+echo -e "  3. Setup SSL (optional): ${YELLOW}sudo certbot --nginx -d laguna.ku.lt -d www.laguna.ku.lt${NC}"
 echo -e "  4. Monitor logs for any issues"
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

@@ -1,12 +1,13 @@
 # Core Flask dependencies - Updated for security and performance
 Flask==3.1.2
-Flask-Caching==2.3.0
+Flask-Caching==2.3.1
 requests==2.32.3
 Werkzeug>=3.1.0  # Explicit Flask dependency for security
 
 # Geospatial dependencies for GPKG support
-# NOTE: pandas 2.0.3 required for GPKG compatibility (2.1+ has numpy conversion issues)
-pandas==2.0.3
+# Updated to latest stable versions (October 2025)
+pandas==2.2.3
 geopandas==1.1.1
 Fiona==1.10.1
 pyproj==3.7.1
+numpy>=1.26.0,<2.0  # Compatible with pandas 2.2.3

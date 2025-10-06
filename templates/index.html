@@ -181,38 +181,46 @@
 
         .bbt-nav-buttons {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 10px;
+            align-items: stretch;
+        }
+
+        .bbt-button-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
         }
 
         .bbt-nav-btn {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: var(--button-text-color);
             border: none;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 12px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             white-space: nowrap;
             box-shadow: 0 2px 4px var(--shadow-color);
             text-transform: capitalize;
-            min-width: fit-content;
-            max-width: 100px;
+            flex: 1;
+            text-align: left;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .bbt-nav-btn:hover {
-            transform: translateY(-2px);
+            transform: translateX(3px);
             box-shadow: 0 4px 8px var(--shadow-color);
             background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
         }
 
         .bbt-nav-btn:active {
-            transform: translateY(0px);
+            transform: translateX(0px);
             box-shadow: 0 2px 4px var(--shadow-color);
         }
 
@@ -220,6 +228,192 @@
             background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
             box-shadow: 0 2px 6px var(--shadow-color);
         }
+
+        .bbt-data-btn {
+            background: linear-gradient(135deg, #FF8C00 0%, #FF6347 100%);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(255, 140, 0, 0.3);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .bbt-data-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(255, 140, 0, 0.5);
+            background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+        }
+
+        .bbt-data-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* BBT Data Popup Modal */
+        .bbt-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .bbt-popup-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bbt-popup {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .bbt-popup-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bbt-popup-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .bbt-popup-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bbt-popup-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .bbt-popup-content {
+            padding: 20px;
+        }
+
+        .bbt-data-field {
+            margin-bottom: 16px;
+        }
+
+        .bbt-data-field label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .bbt-data-field input,
+        .bbt-data-field textarea,
+        .bbt-data-field select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .bbt-data-field input:focus,
+        .bbt-data-field textarea:focus,
+        .bbt-data-field select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .bbt-data-field textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .bbt-popup-actions {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            justify-content: flex-end;
+        }
+
+        .bbt-popup-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bbt-popup-btn-save {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .bbt-popup-btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .bbt-popup-btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .bbt-popup-btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         h3 {
             color: var(--text-color);
             font-size: 16px;
@@ -303,7 +497,7 @@
         .status {
             position: absolute;
             top: 10px;
-            right: 10px;
+            left: 10px;
             background: white;
             padding: 8px 15px;
             border-radius: 20px;
@@ -388,30 +582,55 @@
                 <span class="help-icon" title="MARBEFES BBT Database&#10;&#10;• Browse Broad Belt Transect (BBT) vector data layers&#10;• View EMODnet seabed habitat data overlays&#10;• Access HELCOM Baltic Sea environmental pressure data&#10;• Use your mouse to pan and zoom the map&#10;• Click on features for detailed information&#10;• Hover over BBT polygons for area calculations">ⓘ</span>
             </h1>
             <div class="subtitle">Marine Biodiversity and Ecosystem Functioning leading to Ecosystem Services</div>
-            <div class="project-info">
-                <div class="project-links">
-                    <a href="https://marbefes.eu" target="_blank" title="Visit MARBEFES Project Website">🌐 marbefes.eu</a>
-                    <a href="https://cordis.europa.eu/project/id/101060937" target="_blank" title="View on CORDIS">📋 CORDIS</a>
-                    <a href="https://marbefes.lifewatch.eu" target="_blank" title="MARBEFES Toolbox">🔧 Toolbox</a>
-                </div>
-                <div class="grant-info">
-                    <small>Horizon Europe Grant Agreement No. 101060937</small>
-                </div>
-            </div>
 
             <h3>BBT Quick Navigation</h3>
             <div class="bbt-nav-section">
                 <div class="bbt-nav-buttons" id="bbt-nav-buttons">
-                    <!-- Instantly functional BBT buttons -->
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Archipelago')" title="🗺️ Zoom to Archipelago BBT area">Archipelago</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Balearic')" title="🗺️ Zoom to Balearic BBT area">Balearic</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Bay of Gdansk')" title="🗺️ Zoom to Bay of Gdansk BBT area">Bay of Gdansk</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Gulf of Biscay')" title="🗺️ Zoom to Gulf of Biscay BBT area">Gulf of Biscay</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Heraklion')" title="🗺️ Zoom to Heraklion BBT area">Heraklion</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Hornsund')" title="🗺️ Zoom to Hornsund BBT area">Hornsund</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Kongsfjord')" title="🗺️ Zoom to Kongsfjord BBT area">Kongsfjord</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Lithuanian coastal zone')" title="🗺️ Zoom to Lithuanian coastal zone BBT area">Lithuanian coastal zone</button>
-                    <button class="bbt-nav-btn" onclick="zoomToBBTArea('Sardinia')" title="🗺️ Zoom to Sardinia BBT area">Sardinia</button>
+                    <!-- Vertical left-aligned BBT buttons with data buttons -->
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Archipelago')" title="🗺️ Zoom to Archipelago BBT area">Archipelago</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Archipelago')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Balearic')" title="🗺️ Zoom to Balearic BBT area">Balearic</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Balearic')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Bay of Gdansk')" title="🗺️ Zoom to Bay of Gdansk BBT area">Bay of Gdansk</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Bay of Gdansk')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Gulf of Biscay')" title="🗺️ Zoom to Gulf of Biscay BBT area">Gulf of Biscay</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Gulf of Biscay')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Heraklion')" title="🗺️ Zoom to Heraklion BBT area">Heraklion</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Heraklion')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Hornsund')" title="🗺️ Zoom to Hornsund BBT area">Hornsund</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Hornsund')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Irish Sea')" title="🗺️ Zoom to Irish Sea BBT area">Irish Sea</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Irish Sea')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Kongsfjord')" title="🗺️ Zoom to Kongsfjord BBT area">Kongsfjord</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Kongsfjord')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Lithuanian coast')" title="🗺️ Zoom to Lithuanian coast BBT area">Lithuanian coast</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Lithuanian coast')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('North Sea')" title="🗺️ Zoom to North Sea BBT area">North Sea</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('North Sea')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
+                    <div class="bbt-button-row">
+                        <button class="bbt-nav-btn" onclick="zoomToBBTArea('Sardinia')" title="🗺️ Zoom to Sardinia BBT area">Sardinia</button>
+                        <button class="bbt-data-btn" onclick="openBBTDataPopup('Sardinia')" title="📊 View/Edit BBT Data">📊</button>
+                    </div>
                     <div class="loading-indicator" id="bbt-loading" style="color: #20B2AA; font-size: 10px; padding: 4px; text-align: center; margin-top: 8px; display: none;">
                         🔄 Loading enhanced features...
                     </div>
@@ -419,24 +638,42 @@
             </div>
 
             <h3>Available Layers</h3>
+
+            <!-- Collapsible EMODnet Overlay Section -->
             <div class="control-group">
-                <label for="layer-select">Select EMODnet Overlay</label>
-                <select id="layer-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px;" onclick="toggleEmodnetPanel()">
+                    <label for="layer-select" style="margin: 0; cursor: pointer; flex: 1;">Select EMODnet Overlay</label>
+                    <span id="emodnet-status-tooltip" style="font-size: 11px; color: #666; margin: 0 8px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="">No layer</span>
+                    <span id="emodnet-toggle-icon" style="font-size: 16px; color: #20B2AA;">▼</span>
+                </div>
+                <div id="emodnet-panel" style="display: block; margin-top: 0px;">
+                    <select id="layer-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </select>
+                </div>
             </div>
 
+            <!-- Collapsible HELCOM Overlay Section -->
             <div class="control-group">
-                <label for="helcom-select">Select HELCOM Overlay</label>
-                <select id="helcom-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                </select>
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px;" onclick="toggleHelcomPanel()">
+                    <label for="helcom-select" style="margin: 0; cursor: pointer; flex: 1;">HELCOM Baltic Sea Overlay</label>
+                    <span id="helcom-status-tooltip" style="font-size: 11px; color: #666; margin: 0 8px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="">No overlay</span>
+                    <span id="helcom-toggle-icon" style="font-size: 16px; color: #20B2AA;">▶</span>
+                </div>
+                <div id="helcom-panel" style="display: none; margin-top: 0px;">
+                    <select id="helcom-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    </select>
+                </div>
             </div>
 
+            <!-- Collapsible Advanced Controls Section -->
             <div class="control-group">
-                <button id="retry-default-btn" onclick="retryDefaultLayer()" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #20B2AA; background: #20B2AA; color: white; cursor: pointer; font-size: 12px; margin-top: 5px;">
-                    🔄 Retry Default Layer
-                </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px; margin-top: 15px;" onclick="toggleAdvancedPanel()">
+                    <h3 style="margin: 0; cursor: pointer; flex: 1; font-size: 14px;">Advanced Controls</h3>
+                    <span id="advanced-toggle-icon" style="font-size: 16px; color: #20B2AA;">▶</span>
+                </div>
             </div>
 
+            <div id="advanced-panel" style="display: none;">
             <div class="controls">
                 <div class="control-group">
                     <label for="opacity">Layer Opacity</label>
@@ -523,6 +760,19 @@
                     </div>
                 </div>
             </div>
+            </div>
+
+            <!-- Project Info moved to bottom -->
+            <div class="project-info" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(32, 178, 170, 0.3);">
+                <div class="project-links">
+                    <a href="https://marbefes.eu" target="_blank" title="Visit MARBEFES Project Website">🌐 marbefes.eu</a>
+                    <a href="https://cordis.europa.eu/project/id/101060937" target="_blank" title="View on CORDIS">📋 CORDIS</a>
+                    <a href="https://marbefes.lifewatch.eu" target="_blank" title="MARBEFES Toolbox">🔧 Toolbox</a>
+                </div>
+                <div class="grant-info">
+                    <small>Horizon Europe Grant Agreement No. 101060937</small>
+                </div>
+            </div>
 
             <div class="legend-container" id="legend-container" style="display: none;">
                 <h4>Legend</h4>
@@ -536,8 +786,13 @@
     </div>
 
     <script>
-        // Initialize map
-        var map = L.map('map').setView([54.0, 10.0], 4);
+        // Application configuration from Flask
+        const API_BASE_URL = '{{ API_BASE_URL }}';
+        const WMS_BASE_URL = '{{ WMS_BASE_URL }}';
+        const HELCOM_WMS_BASE_URL = '{{ HELCOM_WMS_BASE_URL }}';
+
+        // Initialize map without default zoom control
+        var map = L.map('map', { zoomControl: false }).setView([54.0, 10.0], 4);
 
         // Base maps
         var baseMaps = {
@@ -569,13 +824,14 @@
         const helcomLayers = {{ helcom_layers | tojson }};
         const vectorLayers = {{ vector_layers | tojson }};
         const vectorSupport = {{ vector_support | tojson }};
+        const bathymetryStats = {{ bathymetry_stats | tojson }};
 
         let currentLayer = 'eusm_2023_eunis2019_full'; // Default to EUSeaMap 2023 EUNIS 2019 classification (full resolution)
         let currentLayerType = 'wms';
         let currentOpacity = 0.7;
         let wmsLayer = null;
         let helcomLayer = null;
-        let vectorLayerGroup = L.layerGroup();
+        let vectorLayerGroup = L.layerGroup().addTo(map);
 
         // BBT Navigation variables
         let bbtFeatureData = null;
@@ -587,7 +843,7 @@
             console.log('🔄 Loading BBT features from API...');
 
             try {
-                const apiUrl = '/api/vector/layer/' + encodeURIComponent('Bbts - Broad Belt Transects');
+                const apiUrl = `${API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Bbt Areas')}`;
                 console.log('📡 Fetching from URL:', apiUrl);
 
                 const response = await fetch(apiUrl);
@@ -754,7 +1010,7 @@
 
                 // Auto-load vector layer if not already loaded
                 if (currentLayerType !== 'vector' || !vectorLayerGroup.getLayers().length) {
-                    selectVectorLayerAsBase('Bbts - Broad Belt Transects');
+                    selectVectorLayerAsBase('Bbt - Bbt Areas');
                 }
             }
         }
@@ -868,11 +1124,23 @@
                 habitat: 'Arctic-boreal species transition zone',
                 research_focus: 'Climate-driven Arctic "atlantification"'
             },
-            'Lithuanian coastal zone': {
+            'Lithuanian coast': {
                 region: 'Baltic Sea',
                 description: 'Shallow coastal ecosystem with freshwater inputs',
                 habitat: 'Sandy coastal waters with estuarine influence',
                 research_focus: 'Coastal zone management and eutrophication'
+            },
+            'North Sea': {
+                region: 'North Sea',
+                description: 'Productive temperate shelf ecosystem',
+                habitat: 'Continental shelf with diverse benthic communities',
+                research_focus: 'Anthropogenic impacts and ecosystem services'
+            },
+            'Irish Sea': {
+                region: 'Irish Sea',
+                description: 'Semi-enclosed temperate marine ecosystem',
+                habitat: 'Coastal and shelf habitats with tidal dynamics',
+                research_focus: 'Marine spatial planning and biodiversity conservation'
             },
             'Sardinia': {
                 region: 'Mediterranean Sea',
@@ -1309,11 +1577,19 @@
                 document.getElementById('status').textContent = 'Loading vector layer...';
                 document.getElementById('status').className = 'status loading';
 
+                // Determine simplification based on zoom level
+                // For zoom < 8 (all BBTs view): use 800m simplification (0.007 degrees ≈ 800m)
+                // For zoom >= 8 (individual BBT): no simplification
+                const currentZoom = map.getZoom();
+                const simplifyParam = currentZoom < 8 ? '?simplify=0.007' : '';
+
+                console.log(`🔧 Loading vector layer with zoom=${currentZoom}, simplification=${simplifyParam ? '800m' : 'none'}`);
+
                 // Fetch GeoJSON for the layer with timeout
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-                const response = await fetch(`/api/vector/layer/${encodeURIComponent(layerName)}`, {
+                const response = await fetch(`${API_BASE_URL}/vector/layer/${encodeURIComponent(layerName)}${simplifyParam}`, {
                     signal: controller.signal
                 });
 
@@ -1432,12 +1708,17 @@
 
         // ⚡ ASYNC OPTIMIZATION FUNCTIONS ⚡
 
-        // Concurrent layer processing for better performance
+        // Concurrent layer processing for better performance (with simplification support)
         async function loadMultipleLayersConcurrently(layerNames, maxConcurrent = 3) {
             console.log(`🚀 Loading ${layerNames.length} layers concurrently (max ${maxConcurrent} parallel)`);
 
             const results = [];
             const errors = [];
+
+            // Determine current zoom for simplification
+            const currentZoom = map.getZoom();
+            const simplifyParam = currentZoom < 8 ? '?simplify=0.007' : '';
+            const simplificationType = currentZoom < 8 ? 'simplified' : 'full';
 
             // Process in batches to avoid overwhelming the server
             for (let i = 0; i < layerNames.length; i += maxConcurrent) {
@@ -1448,7 +1729,7 @@
                         const controller = new AbortController();
                         const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
-                        const response = await fetch(`/api/vector/layer/${encodeURIComponent(layerName)}`, {
+                        const response = await fetch(`${API_BASE_URL}/vector/layer/${encodeURIComponent(layerName)}${simplifyParam}`, {
                             signal: controller.signal
                         });
 
@@ -1459,9 +1740,9 @@
                         }
 
                         const data = await response.json();
-                        return { layerName, data, success: true };
+                        return { layerName, data, success: true, simplificationType };
                     } catch (error) {
-                        return { layerName, error: error.message, success: false };
+                        return { layerName, error: error.message, success: false, simplificationType };
                     }
                 });
 
@@ -1496,13 +1777,15 @@
                 const layerNames = vectorLayers.map(layer => layer.display_name);
                 const { results, errors } = await loadMultipleLayersConcurrently(layerNames, 2);
 
-                // Cache successful results
+                // Cache successful results with simplification-aware keys
                 window.layerCache = window.layerCache || new Map();
-                results.forEach(({ layerName, data }) => {
-                    window.layerCache.set(layerName, data);
+                results.forEach(({ layerName, data, simplificationType }) => {
+                    const cacheKey = `${layerName}:${simplificationType}`;
+                    window.layerCache.set(cacheKey, data);
                 });
 
-                console.log(`✅ Cached ${results.length} layers for instant access`);
+                const simplType = results.length > 0 ? results[0].simplificationType : 'unknown';
+                console.log(`✅ Cached ${results.length} layers (${simplType}) for instant access`);
                 if (errors.length > 0) {
                     console.warn(`⚠️ ${errors.length} layers failed to preload`);
                 }
@@ -1512,21 +1795,26 @@
             }
         }
 
-        // Enhanced layer loading with instant cache access
+        // Enhanced layer loading with instant cache access (simplification-aware)
         async function loadVectorLayerFast(layerName) {
             try {
-                // Check cache first for instant loading
-                if (window.layerCache && window.layerCache.has(layerName)) {
-                    console.log(`⚡ Loading ${layerName} from cache (instant)`);
-                    const geojson = window.layerCache.get(layerName);
+                // Determine current simplification state based on zoom
+                const currentZoom = map.getZoom();
+                const isSimplified = currentZoom < 8;
+                const cacheKey = `${layerName}:${isSimplified ? 'simplified' : 'full'}`;
+
+                // Check cache first for instant loading (with simplification awareness)
+                if (window.layerCache && window.layerCache.has(cacheKey)) {
+                    console.log(`⚡ Loading ${layerName} from cache (${isSimplified ? '800m simplified' : 'full detail'})`);
+                    const geojson = window.layerCache.get(cacheKey);
 
                     // Process immediately from cache
                     await processVectorLayerData(geojson, layerName);
                     return;
                 }
 
-                // Fallback to regular loading
-                console.log(`📡 Loading ${layerName} from server (cache miss)`);
+                // Fallback to regular loading (which will apply simplification)
+                console.log(`📡 Loading ${layerName} from server (cache miss, ${isSimplified ? '800m simplified' : 'full detail'})`);
                 await loadVectorLayer(layerName);
 
             } catch (error) {
@@ -1738,6 +2026,34 @@
 
             // Update legend
             updateLegend(layerName);
+
+            // Update status tooltip with detailed information
+            const statusTooltip = document.getElementById('emodnet-status-tooltip');
+            if (statusTooltip) {
+                // Create detailed layer information
+                let displayName = '';
+                let tooltipDetail = '';
+
+                if (layerName.includes('eunis2019_full')) {
+                    displayName = '✓ EUNIS 2019 Full';
+                    tooltipDetail = 'Layer: EUNIS 2019 (Full Resolution)\nSimplification: None\nDetail Level: Maximum\nBest for: Individual BBT areas (zoom >= 8)\nSource: EMODnet Seabed Habitats';
+                } else if (layerName.includes('eunis2019_800')) {
+                    displayName = '✓ EUNIS 2019 800m';
+                    tooltipDetail = 'Layer: EUNIS 2019 (800m simplification)\nSimplification: 800m\nDetail Level: Simplified\nBest for: All BBTs overview (zoom < 8)\nSource: EMODnet Seabed Habitats';
+                } else if (layerName.includes('eusm')) {
+                    const simplification = layerName.match(/(\d+)/)?.[0] || 'full';
+                    displayName = `✓ EUNIS ${simplification}m`;
+                    tooltipDetail = `Layer: ${layerName}\nSource: EMODnet Seabed Habitats\nFormat: WMS 1.1.0`;
+                } else {
+                    displayName = `✓ ${layerName.replace(/_/g, ' ').substring(0, 20)}`;
+                    tooltipDetail = `Layer: ${layerName}\nSource: EMODnet Seabed Habitats`;
+                }
+
+                statusTooltip.textContent = displayName;
+                statusTooltip.title = tooltipDetail;
+                statusTooltip.style.color = '#28a745';
+                statusTooltip.style.maxWidth = '200px';
+            }
         }
 
         // Function to select HELCOM layer as overlay
@@ -1763,6 +2079,20 @@
 
             // Clear legend since HELCOM might not have standard legends
             document.getElementById('legend').innerHTML = '';
+
+            // Update status tooltip with detailed information
+            const statusTooltip = document.getElementById('helcom-status-tooltip');
+            if (statusTooltip) {
+                // Extract human-readable layer name
+                const shortName = layerName.split(':').pop().replace(/_/g, ' ');
+                const displayName = `✓ ${shortName.substring(0, 25)}${shortName.length > 25 ? '...' : ''}`;
+                const tooltipDetail = `Layer: ${shortName}\nSource: HELCOM Baltic Sea\nRegion: Baltic Sea\nFormat: WMS 1.1.0\nFull ID: ${layerName}`;
+
+                statusTooltip.textContent = displayName;
+                statusTooltip.title = tooltipDetail;
+                statusTooltip.style.color = '#28a745';
+                statusTooltip.style.maxWidth = '200px';
+            }
         }
 
         // Function to select vector layer
@@ -1949,6 +2279,48 @@
             }
         }
 
+        // Function to toggle EMODnet panel visibility
+        function toggleEmodnetPanel() {
+            const panel = document.getElementById('emodnet-panel');
+            const icon = document.getElementById('emodnet-toggle-icon');
+
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                panel.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        // Function to toggle HELCOM panel visibility
+        function toggleHelcomPanel() {
+            const panel = document.getElementById('helcom-panel');
+            const icon = document.getElementById('helcom-toggle-icon');
+
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                panel.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
+        // Function to toggle Advanced Controls panel visibility
+        function toggleAdvancedPanel() {
+            const panel = document.getElementById('advanced-panel');
+            const icon = document.getElementById('advanced-toggle-icon');
+
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                panel.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+
         // Function to retry loading default layer manually
         function retryDefaultLayer() {
             console.log('🔄 Manual retry of default layer requested');
@@ -2043,8 +2415,15 @@
         // Add scale control
         L.control.scale().addTo(map);
 
-        // Add zoom control with custom position
-        map.zoomControl.setPosition('topright');
+        // Add native Leaflet layers control widget
+        var overlayMaps = {
+            'BBT Areas': vectorLayerGroup  // BBT vector layer group
+        };
+
+        var layersControl = L.control.layers(baseMaps, overlayMaps, {
+            position: 'topright',
+            collapsed: true  // Collapsed by default - click to expand
+        }).addTo(map);
 
         // Remove tooltips when clicking on empty map areas
         map.on('click', function(e) {
@@ -2057,16 +2436,12 @@
         let lastAutoSwitchedZoom = -1;
 
         function getOptimalEUSeaMapLayer(zoom) {
-            // Return best layer name based on zoom level
-            // Includes fallback to group layer if specific simplification unavailable
-            if (zoom <= 6) {
-                return ['eusm2023_bio_800', 'eusm2023_bio_group', 'eusm2023_bio_full'];
-            } else if (zoom <= 8) {
-                return ['eusm2023_bio_400', 'eusm2023_bio_group', 'eusm2023_bio_full'];
-            } else if (zoom <= 12) {
-                return ['eusm2023_bio_200', 'eusm2023_bio_group', 'eusm2023_bio_full'];
+            // Return best EUNIS 2019 layer name based on zoom level
+            // Uses 800m simplification for zoom < 8, full resolution for zoom >= 8
+            if (zoom < 8) {
+                return ['eusm_2023_eunis2019_800', 'eusm_2023_eunis2019_full'];
             } else {
-                return ['eusm2023_bio_full', 'eusm2023_bio_group'];
+                return ['eusm_2023_eunis2019_full'];
             }
         }
 
@@ -2118,6 +2493,10 @@
         function zoomToBBTArea(areaName) {
             console.log('🎯 Zooming directly to BBT area:', areaName);
 
+            // Set manual zoom flag to prevent auto-reload
+            isManualZoom = true;
+            console.log('🔒 Manual zoom mode enabled');
+
             // Update button states immediately
             document.querySelectorAll('.bbt-nav-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -2126,18 +2505,61 @@
                 }
             });
 
-            // Update status
+            // Set layer selection state
+            currentLayer = 'Bbt - Bbt Areas';
+            currentLayerType = 'vector';
+
+            // Check if we already have BBT data cached
+            if (bbtFeatureData && bbtFeatureData.features) {
+                console.log('⚡ Using cached BBT data for instant zoom');
+
+                // Find the specific feature
+                const feature = bbtFeatureData.features.find(f => f.properties.Name === areaName);
+
+                if (feature) {
+                    console.log('✅ Found specific BBT feature in cache, zooming instantly...');
+
+                    // Update status
+                    document.getElementById('status').textContent = `Zooming to ${areaName}...`;
+                    document.getElementById('status').className = 'status loading';
+
+                    // Check if BBT layer is already loaded (optimization: skip re-rendering if already visible)
+                    const isBBTLayerLoaded = currentLayer === 'Bbt - Bbt Areas' &&
+                                            vectorLayerGroup &&
+                                            vectorLayerGroup.getLayers().length > 0;
+
+                    if (!isBBTLayerLoaded) {
+                        console.log('🔄 BBT layer not loaded, loading it now...');
+                        // Clear any existing layers first
+                        if (typeof vectorLayerGroup !== 'undefined') {
+                            vectorLayerGroup.clearLayers();
+                        }
+
+                        // Load the complete layer WITHOUT auto-zoom
+                        loadVectorLayerWithoutAutoZoom('Bbt - Bbt Areas', bbtFeatureData);
+                    } else {
+                        console.log('⚡ BBT layer already loaded, skipping re-render!');
+                    }
+
+                    // Zoom directly to the specific feature immediately (no delay needed if layer exists)
+                    const zoomDelay = isBBTLayerLoaded ? 0 : 50;
+                    setTimeout(() => {
+                        zoomDirectlyToBBTFeature(feature, areaName);
+                    }, zoomDelay);
+                } else {
+                    console.log('⚠️ Specific feature not found in cache');
+                    zoomToGeneralBBTArea(areaName);
+                }
+                return;
+            }
+
+            // If no cache, fetch the data (first time only)
+            console.log('📡 Loading BBT data for first time...');
             document.getElementById('status').textContent = `Loading ${areaName}...`;
             document.getElementById('status').className = 'status loading';
 
-            // Set layer selection state
-            currentLayer = 'Bbts - Broad Belt Transects';
-            currentLayerType = 'vector';
-
-            console.log('📡 Loading BBT data for direct zoom...');
-
             // Load the BBT vector layer data
-            fetch(`/api/vector/layer/${encodeURIComponent('Bbts - Broad Belt Transects')}`)
+            fetch(`${API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Bbt Areas')}`)
                 .then(response => {
                     console.log('📥 BBT layer API response:', response.status);
                     if (!response.ok) {
@@ -2163,7 +2585,7 @@
                         }
 
                         // Load the complete layer WITHOUT auto-zoom
-                        loadVectorLayerWithoutAutoZoom('Bbts - Broad Belt Transects', geojson);
+                        loadVectorLayerWithoutAutoZoom('Bbt - Bbt Areas', geojson);
 
                         // Then zoom directly to the specific feature with optimized timing
                         setTimeout(() => {
@@ -2172,7 +2594,7 @@
                     } else {
                         console.log('⚠️ Specific feature not found, loading full layer...');
                         // Fallback to fast cached loading
-                        loadVectorLayerFast('Bbts - Broad Belt Transects');
+                        loadVectorLayerFast('Bbt - Bbt Areas');
                     }
                 })
                 .catch(error => {
@@ -2265,9 +2687,21 @@
                 document.getElementById('status').className = 'status success';
 
                 console.log('✅ Direct zoom completed for:', areaName);
+
+                // Reset manual zoom flag after zoom animation completes (500ms delay)
+                setTimeout(() => {
+                    isManualZoom = false;
+                    console.log('🔓 Manual zoom mode disabled');
+                }, 500);
             } else {
                 console.log('⚠️ Invalid bounds, using fallback zoom');
                 zoomToGeneralBBTArea(areaName);
+
+                // Reset flag even on fallback
+                setTimeout(() => {
+                    isManualZoom = false;
+                    console.log('🔓 Manual zoom mode disabled (fallback)');
+                }, 500);
             }
         }
 
@@ -2645,12 +3079,13 @@
         // Auto-load BBT vector layers and EUSeaMap 400m overlay on page startup
         function initializeVectorLayers() {
             console.log('🚀 Auto-loading BBT vector layers on startup...');
+            console.log('📊 Vector layers data:', vectorLayers);
+            console.log('📊 Vector support:', vectorSupport);
 
             if (vectorLayers && vectorLayers.length > 0) {
                 // Load the main BBT layer by default
                 const bbtLayer = vectorLayers.find(layer =>
-                    layer.display_name.includes('Broad Belt Transects') ||
-                    layer.display_name.includes('BBT')
+                    layer.display_name && (layer.display_name.includes('Bbt Areas') || layer.display_name.includes('BBT'))
                 );
 
                 if (bbtLayer) {
@@ -2662,57 +3097,346 @@
                     loadVectorLayerFast(vectorLayers[0].display_name);
                 }
             } else {
-                console.log('⚠️ No vector layers available for auto-loading');
+                console.warn('⚠️ No vector layers available for auto-loading. vectorLayers:', vectorLayers);
             }
 
-            // Auto-load EUNIS 2019 full resolution as overlay (only when zoomed in to BBT coverage)
+            // Auto-load EUNIS 2019 800m as overlay for all BBTs overview
             setTimeout(() => {
-                const defaultWMSLayer = 'eusm_2023_eunis2019_full';
+                const defaultWMSLayer = 'eusm_2023_eunis2019_800';
 
-                // Check if we're zoomed in enough for BBT coverage (zoom level 8 or higher)
-                const currentZoom = map.getZoom();
-                if (currentZoom >= 8) {
-                    console.log('🌊 Auto-loading EUNIS 2019 full resolution overlay (zoom level sufficient)...');
-                    selectWMSLayerAsOverlay(defaultWMSLayer);
+                console.log('🌊 Auto-loading EUNIS 2019 800m overlay (optimized for all BBTs view)...');
+                selectWMSLayerAsOverlay(defaultWMSLayer);
 
-                    // Update dropdown selection to reflect the loaded layer
-                    const layerSelect = document.getElementById('layer-select');
-                    if (layerSelect) {
-                        layerSelect.value = 'wms:' + defaultWMSLayer;
-                    }
-
-                    console.log('✅ Default layers loaded: BBT vectors + EUNIS 2019 full');
-                } else {
-                    console.log('ℹ️  EUNIS 2019 layer will load when you zoom into BBT coverage (zoom >= 8)');
+                // Update dropdown selection to reflect the loaded layer
+                const layerSelect = document.getElementById('layer-select');
+                if (layerSelect) {
+                    layerSelect.value = 'wms:' + defaultWMSLayer;
                 }
+
+                console.log('✅ Default layers loaded: BBT vectors + EUNIS 2019 800m (simplified for overview)');
             }, 1500);
         }
 
         // Initialize vector layers after a brief delay to ensure DOM is ready
         setTimeout(initializeVectorLayers, 1000);
 
-        // Auto-load EUNIS 2019 layer when user zooms into BBT coverage
-        let eunis2019Loaded = false;
+        // Zoom-based EUNIS & Vector layer switching: 800m for overview, full for individual BBTs
+        let currentEunisLayer = 'eusm_2023_eunis2019_800'; // Track current layer
+        let lastZoomLevel = map.getZoom();
+        let lastVectorSimplification = lastZoomLevel < 8 ? 'simplified' : 'full'; // Track vector simplification state
+        let isManualZoom = false; // Flag to prevent auto-reload during manual BBT zoom
+
         map.on('zoomend', function() {
             const currentZoom = map.getZoom();
-            const defaultWMSLayer = 'eusm_2023_eunis2019_full';
+            let targetLayer = null;
+            let needsVectorReload = false;
 
-            // Load EUNIS 2019 when zoomed in (zoom >= 8) and not already loaded
-            if (currentZoom >= 8 && !eunis2019Loaded) {
-                console.log('🌊 Auto-loading EUNIS 2019 full resolution (zoomed into BBT coverage)...');
-                selectWMSLayerAsOverlay(defaultWMSLayer);
+            // Determine which layer should be active based on zoom level
+            if (currentZoom >= 8) {
+                // Zoomed in to individual BBT - use full resolution
+                targetLayer = 'eusm_2023_eunis2019_full';
+
+                // Check if we need to reload vectors from simplified to full
+                if (lastVectorSimplification === 'simplified') {
+                    needsVectorReload = true;
+                    lastVectorSimplification = 'full';
+                }
+            } else {
+                // Zoomed out to all BBTs - use 800m simplified
+                targetLayer = 'eusm_2023_eunis2019_800';
+
+                // Check if we need to reload vectors from full to simplified
+                if (lastVectorSimplification === 'full') {
+                    needsVectorReload = true;
+                    lastVectorSimplification = 'simplified';
+                }
+            }
+
+            // Switch WMS layer if needed
+            if (targetLayer !== currentEunisLayer) {
+                const previousLayer = currentEunisLayer;
+                currentEunisLayer = targetLayer;
+
+                if (currentZoom >= 8) {
+                    console.log(`🔍 Zoom level ${currentZoom}: Switching to EUNIS 2019 Full Resolution (individual BBT detail)`);
+                } else {
+                    console.log(`🗺️ Zoom level ${currentZoom}: Switching to EUNIS 2019 800m (all BBTs overview)`);
+                }
+
+                selectWMSLayerAsOverlay(targetLayer);
 
                 // Update dropdown selection
                 const layerSelect = document.getElementById('layer-select');
                 if (layerSelect) {
-                    layerSelect.value = 'wms:' + defaultWMSLayer;
+                    layerSelect.value = 'wms:' + targetLayer;
                 }
 
-                eunis2019Loaded = true;
-                console.log('✅ EUNIS 2019 layer loaded automatically');
+                console.log(`✅ WMS Layer switched: ${previousLayer} → ${targetLayer}`);
             }
+
+            // Reload vector layers if simplification state changed (but NOT during manual BBT zoom)
+            if (needsVectorReload && vectorLayers && vectorLayers.length > 0 && !isManualZoom) {
+                const bbtLayer = vectorLayers.find(layer =>
+                    layer.display_name.includes('Bbt Areas') ||
+                    layer.display_name.includes('BBT')
+                );
+
+                if (bbtLayer) {
+                    const simplification = currentZoom < 8 ? '800m' : 'full detail';
+                    console.log(`🔄 Reloading BBT vector layer with ${simplification}...`);
+                    loadVectorLayerFast(bbtLayer.display_name);
+                }
+            } else if (isManualZoom) {
+                console.log(`⏭️ Skipping auto-reload during manual BBT zoom`);
+            }
+
+            lastZoomLevel = currentZoom;
         });
 
     </script>
+    <!-- BBT Data Popup Modal -->
+    <div class="bbt-popup-overlay" id="bbt-popup-overlay">
+        <div class="bbt-popup">
+            <div class="bbt-popup-header">
+                <h2 class="bbt-popup-title" id="bbt-popup-title">BBT Data</h2>
+                <button class="bbt-popup-close" onclick="closeBBTDataPopup()">×</button>
+            </div>
+            <div class="bbt-popup-content" id="bbt-popup-content">
+                <!-- Dynamic content populated by JavaScript -->
+            </div>
+            <div class="bbt-popup-actions">
+                <button class="bbt-popup-btn bbt-popup-btn-cancel" onclick="closeBBTDataPopup()">Cancel</button>
+                <button class="bbt-popup-btn bbt-popup-btn-save" onclick="saveBBTData()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // BBT Data storage (in-memory for now, can be saved to backend later)
+        let bbtDataStore = {};
+
+        // Editable template for BBT data
+        const bbtDataTemplate = {
+            location: '',
+            coordinates: '',
+            depth_range: '',
+            habitat_type: '',
+            sampling_date: '',
+            research_team: '',
+            species_count: '',
+            biodiversity_index: '',
+            environmental_status: '',
+            notes: ''
+        };
+
+        // Initialize BBT data for each location
+        function initializeBBTData() {
+            const bbtLocations = [
+                'Archipelago', 'Balearic', 'Bay of Gdansk', 'Gulf of Biscay',
+                'Heraklion', 'Hornsund', 'Kongsfjord', 'Lithuanian coastal zone', 'Sardinia'
+            ];
+
+            bbtLocations.forEach(location => {
+                if (!bbtDataStore[location]) {
+                    bbtDataStore[location] = {
+                        ...bbtDataTemplate,
+                        location: location
+                    };
+                }
+            });
+        }
+
+        // Open BBT data popup
+        function openBBTDataPopup(bbtName) {
+            console.log('📊 Opening BBT data popup for:', bbtName);
+            console.log('📊 Available bathymetry data:', Object.keys(bathymetryStats));
+
+            // Initialize if not done
+            if (Object.keys(bbtDataStore).length === 0) {
+                initializeBBTData();
+            }
+
+            // Get or create data for this BBT
+            if (!bbtDataStore[bbtName]) {
+                bbtDataStore[bbtName] = {
+                    ...bbtDataTemplate,
+                    location: bbtName
+                };
+            }
+
+            const data = bbtDataStore[bbtName];
+
+            // Update popup title
+            document.getElementById('bbt-popup-title').textContent = `${bbtName} - BBT Data`;
+
+            // Generate bathymetry stats section if available
+            const bbtStats = bathymetryStats[bbtName];
+            console.log(`🌊 Bathymetry lookup for "${bbtName}":`, bbtStats);
+            console.log(`🌊 Stats available: ${bbtStats ? 'YES' : 'NO'}`);
+            const bathymetrySection = bbtStats ? `
+                <div class="bbt-data-section" style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; color: #1976d2; font-size: 16px; margin-bottom: 10px;">
+                        🌊 Bathymetry Statistics
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <strong>Min Depth:</strong> ${bbtStats.min_depth_m} m
+                        </div>
+                        <div>
+                            <strong>Max Depth:</strong> ${bbtStats.max_depth_m} m
+                        </div>
+                        <div>
+                            <strong>Avg Depth:</strong> ${bbtStats.avg_depth_m} m
+                        </div>
+                        <div>
+                            <strong>Depth Range:</strong> ${(bbtStats.max_depth_m - bbtStats.min_depth_m).toFixed(1)} m
+                        </div>
+                    </div>
+                    ${bbtStats.notes ? `<div style="font-style: italic; color: #555; margin-bottom: 8px;">${bbtStats.notes}</div>` : ''}
+                    <div style="font-size: 12px; color: #666;">
+                        Source: ${bbtStats.sample_count ? 'EMODnet Bathymetry (sampled)' : 'Manual bathymetric data'}
+                    </div>
+                </div>
+            ` : '';
+
+            // Generate form fields
+            const content = `
+                <div class="bbt-data-field">
+                    <label for="bbt-location">Location</label>
+                    <input type="text" id="bbt-location" value="${data.location}" readonly>
+                </div>
+                ${bathymetrySection}
+                <div class="bbt-data-field">
+                    <label for="bbt-coordinates">Coordinates (Lat, Lon)</label>
+                    <input type="text" id="bbt-coordinates" value="${data.coordinates}" placeholder="e.g., 60.5, 25.2">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-depth">Depth Range (m)</label>
+                    <input type="text" id="bbt-depth" value="${data.depth_range}" placeholder="e.g., 10-50m">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-habitat">Habitat Type</label>
+                    <select id="bbt-habitat">
+                        <option value="">Select habitat type</option>
+                        <option value="Rocky reef" ${data.habitat_type === 'Rocky reef' ? 'selected' : ''}>Rocky reef</option>
+                        <option value="Sandy bottom" ${data.habitat_type === 'Sandy bottom' ? 'selected' : ''}>Sandy bottom</option>
+                        <option value="Muddy bottom" ${data.habitat_type === 'Muddy bottom' ? 'selected' : ''}>Muddy bottom</option>
+                        <option value="Mixed sediment" ${data.habitat_type === 'Mixed sediment' ? 'selected' : ''}>Mixed sediment</option>
+                        <option value="Seagrass meadow" ${data.habitat_type === 'Seagrass meadow' ? 'selected' : ''}>Seagrass meadow</option>
+                        <option value="Kelp forest" ${data.habitat_type === 'Kelp forest' ? 'selected' : ''}>Kelp forest</option>
+                    </select>
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-sampling-date">Last Sampling Date</label>
+                    <input type="date" id="bbt-sampling-date" value="${data.sampling_date}">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-research-team">Research Team</label>
+                    <input type="text" id="bbt-research-team" value="${data.research_team}" placeholder="e.g., Institute Name">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-species-count">Species Count</label>
+                    <input type="number" id="bbt-species-count" value="${data.species_count}" placeholder="Number of species">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-biodiversity">Biodiversity Index</label>
+                    <input type="text" id="bbt-biodiversity" value="${data.biodiversity_index}" placeholder="e.g., Shannon index">
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-env-status">Environmental Status</label>
+                    <select id="bbt-env-status">
+                        <option value="">Select status</option>
+                        <option value="Excellent" ${data.environmental_status === 'Excellent' ? 'selected' : ''}>Excellent</option>
+                        <option value="Good" ${data.environmental_status === 'Good' ? 'selected' : ''}>Good</option>
+                        <option value="Moderate" ${data.environmental_status === 'Moderate' ? 'selected' : ''}>Moderate</option>
+                        <option value="Poor" ${data.environmental_status === 'Poor' ? 'selected' : ''}>Poor</option>
+                        <option value="Bad" ${data.environmental_status === 'Bad' ? 'selected' : ''}>Bad</option>
+                    </select>
+                </div>
+                <div class="bbt-data-field">
+                    <label for="bbt-notes">Additional Notes</label>
+                    <textarea id="bbt-notes" placeholder="Enter any additional observations or notes...">${data.notes}</textarea>
+                </div>
+            `;
+
+            document.getElementById('bbt-popup-content').innerHTML = content;
+            console.log(`🌊 Bathymetry section included: ${bathymetrySection ? 'YES' : 'NO'}`);
+            console.log(`🌊 Content length: ${content.length} characters`);
+
+            // Store current BBT name for saving
+            document.getElementById('bbt-popup-overlay').dataset.currentBbt = bbtName;
+
+            // Show popup
+            document.getElementById('bbt-popup-overlay').classList.add('active');
+        }
+
+        // Close BBT data popup
+        function closeBBTDataPopup() {
+            document.getElementById('bbt-popup-overlay').classList.remove('active');
+        }
+
+        // Save BBT data
+        function saveBBTData() {
+            const bbtName = document.getElementById('bbt-popup-overlay').dataset.currentBbt;
+
+            if (!bbtName) {
+                console.error('No BBT name found for saving');
+                return;
+            }
+
+            // Collect data from form
+            const updatedData = {
+                location: document.getElementById('bbt-location').value,
+                coordinates: document.getElementById('bbt-coordinates').value,
+                depth_range: document.getElementById('bbt-depth').value,
+                habitat_type: document.getElementById('bbt-habitat').value,
+                sampling_date: document.getElementById('bbt-sampling-date').value,
+                research_team: document.getElementById('bbt-research-team').value,
+                species_count: document.getElementById('bbt-species-count').value,
+                biodiversity_index: document.getElementById('bbt-biodiversity').value,
+                environmental_status: document.getElementById('bbt-env-status').value,
+                notes: document.getElementById('bbt-notes').value
+            };
+
+            // Save to store
+            bbtDataStore[bbtName] = updatedData;
+
+            console.log('💾 Saved BBT data for', bbtName, updatedData);
+
+            // TODO: Send data to backend API
+            // fetch(`${API_BASE_URL}/bbt/data/${encodeURIComponent(bbtName)}`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(updatedData)
+            // });
+
+            // Show success message
+            alert(`✅ Data saved successfully for ${bbtName}!`);
+
+            // Close popup
+            closeBBTDataPopup();
+        }
+
+        // Close popup when clicking outside
+        document.getElementById('bbt-popup-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBBTDataPopup();
+            }
+        });
+
+        // Close popup with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('bbt-popup-overlay');
+                if (overlay.classList.contains('active')) {
+                    closeBBTDataPopup();
+                }
+            }
+        });
+
+        // Initialize BBT data on page load
+        initializeBBTData();
+    </script>
+
 </body>
 </html>

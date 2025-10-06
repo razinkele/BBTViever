@@ -22,6 +22,13 @@ class Config:
     WMS_VERSION = os.getenv('WMS_VERSION', '1.3.0')
     WMS_TIMEOUT = int(os.getenv('WMS_TIMEOUT', '10'))
 
+    # HELCOM WMS Service Configuration
+    HELCOM_WMS_BASE_URL = os.getenv(
+        'HELCOM_WMS_BASE_URL',
+        'https://maps.helcom.fi/arcgis/services/MADS/Pressures/MapServer/WMSServer'
+    )
+    HELCOM_WMS_VERSION = os.getenv('HELCOM_WMS_VERSION', '1.3.0')
+
     # Application settings
     MAX_LAYERS_DISPLAY = int(os.getenv('MAX_LAYERS_DISPLAY', '20'))
     DEFAULT_MAP_CENTER_LAT = float(os.getenv('DEFAULT_MAP_CENTER_LAT', '54.0'))
@@ -37,6 +44,10 @@ class Config:
     # Caching settings
     CACHE_TYPE = os.getenv('CACHE_TYPE', 'simple')
     CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT', '3600'))
+    WMS_CACHE_TIMEOUT = int(os.getenv('WMS_CACHE_TIMEOUT', '300'))  # 5 minutes
+
+    # Layer filtering configuration
+    CORE_EUROPEAN_LAYER_COUNT = int(os.getenv('CORE_EUROPEAN_LAYER_COUNT', '6'))
 
     # Logging configuration
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -65,6 +76,15 @@ class ProductionConfig(Config):
 
     # Production logging
     LOG_LEVEL = 'WARNING'
+
+    def __init__(self):
+        super().__init__()
+        # Validate critical production settings
+        if self.SECRET_KEY == 'dev-secret-key-change-in-production':
+            raise ValueError(
+                "Production ERROR: SECRET_KEY must be set via environment variable. "
+                "Default development key is not secure for production use."
+            )
 
 
 class TestingConfig(Config):
