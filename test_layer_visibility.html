@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Layer Visibility Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100vw; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        button {
+            display: block;
+            width: 200px;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Layer Visibility Test</h3>
+        <button onclick="testBBTOnly()">1. BBT Only (RED)</button>
+        <button onclick="testBBTWithWMS()">2. BBT + WMS</button>
+        <button onclick="testBBTOnTop()">3. BBT On Top (Force)</button>
+        <button onclick="checkLayers()">Check Layers</button>
+        <div id="status">Click buttons to test visibility...</div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([54.0, 10.0], 4);
+
+        // Base map
+        const baseMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap'
+        }).addTo(map);
+
+        let bbtLayer = null;
+        let wmsLayer = null;
+        const statusDiv = document.getElementById('status');
+
+        // Test 1: BBT only with BRIGHT RED styling
+        async function testBBTOnly() {
+            clearLayers();
+            statusDiv.innerHTML = '⏳ Loading BBT features...';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/vector/layer/Bbt%20-%20Merged');
+                const geojson = await response.json();
+
+                bbtLayer = L.geoJSON(geojson, {
+                    style: {
+                        color: '#FF0000',        // Bright red border
+                        weight: 5,               // Thick border
+                        opacity: 1,              // Fully opaque
+                        fillColor: '#FF0000',    // Bright red fill
+                        fillOpacity: 0.7         // Semi-transparent fill
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<b>${feature.properties.Name}</b>`);
+                    }
+                }).addTo(map);
+
+                const bounds = bbtLayer.getBounds();
+                map.fitBounds(bounds);
+
+                statusDiv.innerHTML = `
+                    ✅ Loaded ${geojson.features.length} BBT features (BRIGHT RED)<br>
+                    Bounds: ${bounds.toBBoxString()}<br>
+                    <b>You should see RED polygons!</b>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        // Test 2: BBT + WMS overlay
+        async function testBBTWithWMS() {
+            await testBBTOnly();
+
+            // Add WMS overlay
+            wmsLayer = L.tileLayer.wms('https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms', {
+                layers: 'eusm_2023_eunis2019_400',
+                format: 'image/png',
+                transparent: true,
+                opacity: 0.7
+            }).addTo(map);
+
+            statusDiv.innerHTML += '<br>➕ Added WMS overlay<br><b>Are BBT polygons still visible?</b>';
+        }
+
+        // Test 3: Force BBT on top
+        async function testBBTOnTop() {
+            await testBBTWithWMS();
+
+            if (bbtLayer) {
+                bbtLayer.bringToFront();
+                statusDiv.innerHTML += '<br>⬆️ Brought BBT layer to front<br><b>Are BBT polygons visible now?</b>';
+            }
+        }
+
+        // Check what layers exist on map
+        function checkLayers() {
+            const layers = [];
+            map.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    layers.push('TileLayer: ' + (layer.options.layers || 'base map'));
+                } else if (layer instanceof L.GeoJSON) {
+                    layers.push('GeoJSON: ' + layer.getLayers().length + ' features');
+                } else {
+                    layers.push('Other: ' + layer.constructor.name);
+                }
+            });
+
+            statusDiv.innerHTML = `
+                <b>Layers on map (${layers.length}):</b><br>
+                ${layers.join('<br>')}
+            `;
+        }
+
+        function clearLayers() {
+            if (bbtLayer) map.removeLayer(bbtLayer);
+            if (wmsLayer) map.removeLayer(wmsLayer);
+            bbtLayer = null;
+            wmsLayer = null;
+        }
+
+        // Auto-run test 1
+        window.onload = () => {
+            setTimeout(testBBTOnly, 500);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+═══════════════════════════════════════════════════════════════════
+   MARBEFES BBT DATABASE - ONLINE ACCESS INFORMATION
+═══════════════════════════════════════════════════════════════════
+
+🌐 PRIMARY URL (use this one):
+   http://193.219.76.93:5000
+
+═══════════════════════════════════════════════════════════════════
+   QUICK TESTING GUIDE
+═══════════════════════════════════════════════════════════════════
+
+1. Main Application (Interactive Map):
+   👉 http://193.219.76.93:5000/
+   
+   What to test:
+   • Map loads with Leaflet interface
+   • 11 BBT navigation buttons (left sidebar)
+   • EMODnet layer selection dropdown
+   • HELCOM layer selection dropdown
+   • Click on BBT polygons for popup info
+   • Hover for area calculations
+
+2. Health Check (JSON response):
+   👉 http://193.219.76.93:5000/health
+   
+   Should show:
+   • "status": "healthy"
+   • All component statuses
+   • Vector layer count: 1
+   • Timestamp
+
+3. WMS Test Page:
+   👉 http://193.219.76.93:5000/test
+   
+   Shows EMODnet WMS working correctly
+
+4. API Endpoints (JSON data):
+   👉 http://193.219.76.93:5000/api/all-layers
+   👉 http://193.219.76.93:5000/api/vector/layers
+   👉 http://193.219.76.93:5000/api/factsheets
+
+═══════════════════════════════════════════════════════════════════
+   SECURITY FEATURES TO TEST
+═══════════════════════════════════════════════════════════════════
+
+✓ Rate Limiting Test:
+  1. Open: http://193.219.76.93:5000/api/vector/layer/Bbt%20-%20Merged
+  2. Refresh page 11+ times quickly
+  3. Should see error after 10 requests
+
+✓ Path Traversal Protection:
+  Try accessing (should all return 404):
+  • http://193.219.76.93:5000/api/vector/layer/../../etc/passwd
+  • http://193.219.76.93:5000/api/vector/layer/InvalidLayer
+
+═══════════════════════════════════════════════════════════════════
+   CURRENT STATUS
+═══════════════════════════════════════════════════════════════════
+
+Server: RUNNING ✓
+Process ID: 2003457
+Started: 2025-10-07 08:37:29
+Log File: flask_online.log
+
+Already Active Users:
+• IP 31.4.245.191 - Currently browsing
+
+═══════════════════════════════════════════════════════════════════
+   EXPECTED BEHAVIOR
+═══════════════════════════════════════════════════════════════════
+
+✓ Page loads in ~2 seconds
+✓ Map displays with basemap selector
+✓ Vector layers (BBT polygons) load automatically
+✓ No JavaScript console errors
+✓ Responsive design works on mobile
+✓ All security features active
+
+═══════════════════════════════════════════════════════════════════
+   TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════
+
+If page doesn't load:
+1. Check if server is still running:
+   ps aux | grep "python3 app.py"
+
+2. View server logs:
+   tail -f flask_online.log
+
+3. Test localhost:
+   curl http://127.0.0.1:5000/health
+
+4. Restart if needed:
+   pkill -f "python3 app.py"
+   FLASK_ENV=development FLASK_HOST=0.0.0.0 python3 app.py
+
+═══════════════════════════════════════════════════════════════════
+   MONITORING COMMANDS
+═══════════════════════════════════════════════════════════════════
+
+Watch live traffic:
+   tail -f flask_online.log | grep "GET\|POST\|WARNING"
+
+Count requests:
+   grep "GET /" flask_online.log | wc -l
+
+See security events:
+   grep "WARNING.*Invalid layer" flask_online.log
+
+═══════════════════════════════════════════════════════════════════
+
+✨ Enjoy testing your secure, production-ready application!
+

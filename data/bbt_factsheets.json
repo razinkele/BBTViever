@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "total_bbts": 10,
+    "source_directory": "FactSheets",
+    "extraction_date": "2025-10-07T00:42:19.321252"
+  },
+  "bbts": [
+    {
+      "name": "Arctic BBT_ Porsanger",
+      "source_file": "FactSheet Arctic BBT_ Porsanger.xlsx",
+      "data": {
+        "notes": [
+          "As a first attempt we have simply put in the EUNIS categories relevant to Arctic benthic habitats and for the pelagic zone in Svalbard, we likely need to use both Arctic and Atlantic (some of our fjords are almost entirely Atlantic now and others are still Arctic.",
+          "Obviously, these categories are far too detailed for our purposes, so a first task will be to thin these down into the most relevant/overarching categories",
+          "Likely these will be restricted to the main ones in the sheet \"to be incorporated\""
+        ]
+      }
+    },
+    {
+      "name": "Arctic BBT_Svalbard",
+      "source_file": "FactSheet Arctic BBT_Svalbard.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNICE classification",
+          "Area covered per habitat",
+          "km²"
+        ]
+      }
+    },
+    {
+      "name": "Irish Sea",
+      "source_file": "FactSheet Irish Sea.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNICE classification",
+          "Area covered per habitat",
+          "km²"
+        ]
+      }
+    },
+    {
+      "name": "Archipelago",
+      "source_file": "FactSheet_Archipelago.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification",
+          "Area covered per habitat",
+          "km²",
+          "What level?"
+        ],
+        "notes": [
+          "Other options?"
+        ],
+        "Benthic": [
+          "MC63: Baltic circalittoral mud",
+          "km2",
+          "EUNIS 3"
+        ],
+        "Pelagic": [
+          "MH23: Baltic completely mixed water column with reduced salinity",
+          "km2",
+          "EUNIS 3"
+        ],
+        "Ice associated": [
+          "MJ12: Baltic sea ice",
+          "km2",
+          "EUNIS 3"
+        ]
+      }
+    },
+    {
+      "name": "Balearic",
+      "source_file": "FactSheet_Balearic.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification",
+          "Area covered per habitat",
+          "km²"
+        ],
+        "Rodolith beds": "Assemblages of Mediterranean coastal detritic bottoms biocenosis with rhodolithes (MC352)",
+        "Maërl and Peyssonnelia": "Association with Peyssonnelia rosa-marina (MC3522)",
+        "Maërl and Osmundaria": "Association with Osmundaria volubilis (MC3515)",
+        "Maërl and Laminaria": "Association with Laminaria rodriguezii on detritic beds (MC3517)",
+        "Coralligenous": "Coralligenous biocenosis (MC151)",
+        "Detritic bottoms with biocenosis": "Mediterranean animal communities of coastal detritic bottoms (A5.46)",
+        "Posidonia oceanica meadow": "Biocenosis of Posidonia oceanica (MB252)"
+      }
+    },
+    {
+      "name": "BlackSea",
+      "source_file": "FactSheet_BlackSea.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification",
+          "Area covered per habitat",
+          "km²"
+        ],
+        "MSFD classification": "Area covered per habitat"
+      }
+    },
+    {
+      "name": "GulfofBiscay",
+      "source_file": "FactSheet_GulfofBiscay.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification",
+          "Area covered per habitat",
+          "km²"
+        ],
+        "Estuary": [
+          "J5",
+          "0.120121",
+          "km2"
+        ]
+      }
+    },
+    {
+      "name": "Heraklion",
+      "source_file": "FactSheet_Heraklion.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification",
+          "Area covered per habitat",
+          "km²"
+        ],
+        "notes": [
+          "to use also habitat types of EU Habitats Directive?",
+          "to use also NATURA mapping and NATURA monitoring?"
+        ]
+      }
+    },
+    {
+      "name": "Lithuanian",
+      "source_file": "FactSheet_Lithuanian.ods",
+      "data": {
+        "Benthic habitat": [
+          "EUNICE classification",
+          "Area covered per habitat",
+          "km²"
+        ]
+      }
+    },
+    {
+      "name": "NorthSea Belgium",
+      "source_file": "Factsheet-NorthSea-Belgium.xlsx",
+      "data": {
+        "Benthic habitat": [
+          "EUNIS classification (2019)",
+          "Area covered per habitat",
+          "km²"
+        ],
+        "Muddy sand": "MD62: Atlantic offshore circalittoral mud",
+        "Sand": "MD52: Atlantic offshore circalittoral sand",
+        "coarse substrate": "MD32: Atlantic offshore circalittoral coarse sediment",
+        "mixed sediment": "MD42: Atlantic offshore circalittoral mixed sediment",
+        "Pelagic habitat": [
+          "OSPAR assessment units for eutrophication and pelagic habitat diversity (MSFD)",
+          "ODIMS - Submission: OSPAR Common Procedure Assessment Units"
+        ],
+        "River plume": [
+          "Scheldt plume",
+          "boundaries by WFD and 32 psu salinity"
+        ],
+        "Coastal": [
+          "Southern North Sea",
+          "permanently mixed, less than 35m depth"
+        ],
+        "Shelf": [
+          "Northern North Sea",
+          "seasonally stratified, more than 35m depth"
+        ]
+      }
+    }
+  ]
+}

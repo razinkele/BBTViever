@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BBT Display Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 600px; }
+        #info { padding: 10px; background: #f0f0f0; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>BBT Feature Display Test</h2>
+        <div id="status">Loading...</div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([54.0, 10.0], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        const statusDiv = document.getElementById('status');
+
+        // Fetch and display BBT features
+        fetch('http://localhost:5000/api/vector/layer/Bbt%20-%20Merged')
+            .then(r => r.json())
+            .then(geojson => {
+                statusDiv.innerHTML = `
+                    ✅ Loaded ${geojson.features.length} features<br>
+                    Feature names: ${geojson.features.map(f => f.properties.Name).join(', ')}
+                `;
+
+                // Add to map with obvious styling
+                const layer = L.geoJSON(geojson, {
+                    style: {
+                        color: '#FF0000',
+                        weight: 3,
+                        opacity: 1,
+                        fillColor: '#FF0000',
+                        fillOpacity: 0.5
+                    },
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(`<b>${feature.properties.Name}</b>`);
+                    }
+                }).addTo(map);
+
+                // Zoom to bounds
+                map.fitBounds(layer.getBounds());
+
+                console.log('✅ Features added to map:', geojson.features.length);
+                console.log('Layer bounds:', layer.getBounds());
+            })
+            .catch(err => {
+                statusDiv.innerHTML = '❌ Error: ' + err.message;
+                console.error(err);
+            });
+    </script>
+</body>
+</html>

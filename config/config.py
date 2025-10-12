@@ -2,6 +2,7 @@
 Configuration management for EMODnet Seabed Habitats Viewer
 """
 import os
+import secrets
 from typing import Dict, Any
 
 
@@ -9,7 +10,9 @@ class Config:
     """Base configuration class"""
 
     # Flask settings
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    # Use secrets module for cryptographically strong random key in development
+    # Production MUST set SECRET_KEY environment variable
+    SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_hex(32))
     DEBUG = False
     TESTING = False
     APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '')  # Subpath for mounting app (e.g., '/BBTS')
@@ -80,10 +83,12 @@ class ProductionConfig(Config):
     def __init__(self):
         super().__init__()
         # Validate critical production settings
-        if self.SECRET_KEY == 'dev-secret-key-change-in-production':
+        # Require explicit SECRET_KEY in production (not auto-generated)
+        if 'SECRET_KEY' not in os.environ:
             raise ValueError(
-                "Production ERROR: SECRET_KEY must be set via environment variable. "
-                "Default development key is not secure for production use."
+                "Production ERROR: SECRET_KEY environment variable must be explicitly set. "
+                "Auto-generated keys are not suitable for production (sessions will reset on restart). "
+                "Generate a secure key with: python -c 'import secrets; print(secrets.token_hex(32))'"
             )
 
 

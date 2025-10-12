@@ -12,6 +12,8 @@ from xml.etree import ElementTree as ET
 # Third-party imports
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_caching import Cache
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import requests
 
 # Add src and config directories to path
@@ -52,6 +54,15 @@ logger = get_logger(__name__)
 # Initialize Flask-Caching
 cache = Cache(app, config={'CACHE_TYPE': config.CACHE_TYPE, 'CACHE_DEFAULT_TIMEOUT': config.CACHE_DEFAULT_TIMEOUT})
 
+# Initialize Flask-Limiter for API rate limiting
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+    strategy="fixed-window"
+)
+
 # Initialize requests session with connection pooling for WMS requests
 # Connection pooling provides 20-40% performance improvement for repeated WMS calls
 wms_session = requests.Session()
@@ -59,7 +70,7 @@ wms_session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(
     pool_connections=10,  # Number of connection pools to cache
     pool_maxsize=20,      # Max connections per pool
-    max_retries=3,        # Retry failed requests
+    max_retries=0,        # No retries for faster page loads
     pool_block=False      # Don't block if pool is full
 )
 wms_session.mount('http://', adapter)
@@ -99,6 +110,7 @@ CARIBBEAN_EXCLUDE_TERMS = ['carib', 'caribbean']
 
 # Bathymetry Statistics Configuration
 BATHYMETRY_STATS_FILE = Path("data/bbt_bathymetry_stats.json")
+FACTSHEET_DATA_FILE = Path("data/bbt_factsheets.json")
 
 def load_bathymetry_stats():
     """
@@ -120,8 +132,30 @@ def load_bathymetry_stats():
         logger.info("Bathymetry statistics file not found - stats will not be displayed")
         return {}
 
-# Load bathymetry statistics on startup
+def load_factsheet_data():
+    """
+    Load BBT factsheet data from JSON file if available.
+
+    Returns:
+        dict: Factsheet data or empty dict if not available
+    """
+    if FACTSHEET_DATA_FILE.exists():
+        try:
+            with open(FACTSHEET_DATA_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                bbt_count = len(data.get('bbts', []))
+                logger.info(f"Loaded factsheet data for {bbt_count} BBT areas")
+                return data
+        except Exception as e:
+            logger.warning(f"Failed to load factsheet data: {e}")
+            return {}
+    else:
+        logger.info("Factsheet data file not found - factsheet endpoints will return 404")
+        return {}
+
+# Load data on startup for performance (cached in memory)
 BATHYMETRY_STATS = load_bathymetry_stats()
+FACTSHEET_DATA = load_factsheet_data()
 
 
 # Layer filter functions (named for clarity and debugging)
@@ -369,6 +403,95 @@ def index():
     )
 
 
+@app.route("/health")
+@limiter.exempt  # Health checks should not be rate limited
+def health_check():
+    """
+    Health check endpoint for monitoring and load balancers
+
+    Returns:
+        JSON with health status and component availability
+    """
+    health_status = {
+        "status": "healthy",
+        "timestamp": None,  # Will be set below
+        "version": "1.2.0",
+        "components": {}
+    }
+
+    # Get current timestamp (using timezone-aware datetime for Python 3.12+ compatibility)
+    from datetime import datetime, timezone
+    health_status["timestamp"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+
+    # Check vector support
+    health_status["components"]["vector_support"] = {
+        "available": VECTOR_SUPPORT,
+        "status": "operational" if VECTOR_SUPPORT else "disabled"
+    }
+
+    # Check WMS connectivity
+    wms_healthy = False
+    wms_error = None
+    try:
+        test_response = wms_session.get(WMS_BASE_URL, params={"service": "WMS", "request": "GetCapabilities"}, timeout=3)
+        wms_healthy = test_response.status_code == 200
+        if not wms_healthy:
+            wms_error = f"HTTP {test_response.status_code}"
+    except Exception as e:
+        wms_error = str(e)
+
+    health_status["components"]["wms_service"] = {
+        "url": WMS_BASE_URL,
+        "status": "operational" if wms_healthy else "degraded",
+        "error": wms_error
+    }
+
+    # Check HELCOM WMS connectivity
+    helcom_healthy = False
+    helcom_error = None
+    try:
+        test_response = wms_session.get(HELCOM_WMS_BASE_URL, params={"service": "WMS", "request": "GetCapabilities"}, timeout=3)
+        helcom_healthy = test_response.status_code == 200
+        if not helcom_healthy:
+            helcom_error = f"HTTP {test_response.status_code}"
+    except Exception as e:
+        helcom_error = str(e)
+
+    health_status["components"]["helcom_wms_service"] = {
+        "url": HELCOM_WMS_BASE_URL,
+        "status": "operational" if helcom_healthy else "degraded",
+        "error": helcom_error
+    }
+
+    # Check cache
+    health_status["components"]["cache"] = {
+        "type": config.CACHE_TYPE,
+        "status": "operational"
+    }
+
+    # Check vector data if available
+    if VECTOR_SUPPORT and vector_loader:
+        try:
+            layer_count = len(vector_loader.loaded_layers)
+            health_status["components"]["vector_data"] = {
+                "status": "operational" if layer_count > 0 else "no_data",
+                "layer_count": layer_count
+            }
+        except Exception as e:
+            health_status["components"]["vector_data"] = {
+                "status": "error",
+                "error": str(e)
+            }
+
+    # Overall status determination
+    critical_services = [wms_healthy or helcom_healthy]  # At least one WMS should work
+    if not all(critical_services):
+        health_status["status"] = "degraded"
+        return jsonify(health_status), 503
+
+    return jsonify(health_status), 200
+
+
 @app.route("/logo/<filename>")
 def serve_logo(filename):
     """Serve logo files from LOGO directory"""
@@ -411,10 +534,18 @@ def api_vector_layers():
 
 
 @app.route("/api/vector/layer/<path:layer_name>")
+@limiter.limit("10 per minute")  # Stricter limit for expensive GeoJSON operations
 def api_vector_layer_geojson(layer_name):
     """API endpoint to get GeoJSON for a specific vector layer"""
     if not VECTOR_SUPPORT:
         return jsonify({"error": "Vector support not available"}), 503
+
+    # Validate layer name against whitelist to prevent path traversal
+    if vector_loader and vector_loader.loaded_layers:
+        valid_layer_names = [layer.display_name for layer in vector_loader.loaded_layers]
+        if layer_name not in valid_layer_names:
+            logger.warning(f"Invalid layer name requested: {layer_name}")
+            return jsonify({"error": f"Layer '{layer_name}' not found"}), 404
 
     try:
         # Get optional simplification parameter
@@ -445,7 +576,50 @@ def api_vector_bounds():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/factsheets")
+def api_factsheets():
+    """API endpoint to get all BBT factsheet data (cached in memory)"""
+    try:
+        # Use cached data loaded at startup for performance
+        if not FACTSHEET_DATA:
+            return jsonify({"error": "Factsheet data not found"}), 404
+
+        return jsonify(FACTSHEET_DATA)
+    except Exception as e:
+        logger.error(f"Error in api_factsheets: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/factsheet/<bbt_name>")
+def api_factsheet(bbt_name):
+    """API endpoint to get factsheet data for a specific BBT (cached in memory)"""
+    try:
+        # Use cached data loaded at startup for performance
+        if not FACTSHEET_DATA:
+            return jsonify({"error": "Factsheet data not found"}), 404
+
+        # Normalize BBT name for matching (case-insensitive, flexible matching)
+        bbt_name_normalized = bbt_name.lower().replace("_", " ").replace("-", " ")
+
+        # Search for matching factsheet
+        for bbt in FACTSHEET_DATA.get("bbts", []):
+            factsheet_name_normalized = bbt["name"].lower().replace("_", " ").replace("-", " ")
+
+            # Check for exact match or partial match
+            if (bbt_name_normalized == factsheet_name_normalized or
+                bbt_name_normalized in factsheet_name_normalized or
+                factsheet_name_normalized in bbt_name_normalized):
+                return jsonify(bbt)
+
+        return jsonify({"error": f"No factsheet found for BBT: {bbt_name}"}), 404
+
+    except Exception as e:
+        logger.error(f"Error in api_factsheet: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/capabilities")
+@limiter.limit("30 per minute")  # Moderate limit for external WMS requests
 def api_capabilities():
     """API endpoint to get WMS capabilities"""
     params = {"service": "WMS", "version": WMS_VERSION, "request": "GetCapabilities"}
@@ -458,6 +632,7 @@ def api_capabilities():
 
 
 @app.route("/api/legend/<path:layer_name>")
+@limiter.exempt  # Legend URLs are lightweight and can be unlimited
 def api_legend(layer_name):
     """API endpoint to get legend for a specific layer"""
     legend_url = (
@@ -505,13 +680,14 @@ if __name__ == "__main__":
     logger.info("Open http://localhost:5000 in your browser")
     logger.info("\nAvailable endpoints:")
     logger.info("  /              - Main interactive map viewer")
+    logger.info("  /health        - Health check endpoint for monitoring")
     logger.info("  /test          - Test WMS connectivity")
     logger.info("  /api/layers    - Get WMS layers (JSON)")
     logger.info("  /api/all-layers - Get all layers (WMS + vector, JSON)")
     logger.info("  /api/vector/layers - Get vector layers (JSON)")
-    logger.info("  /api/vector/layer/<name> - Get vector layer GeoJSON")
+    logger.info("  /api/vector/layer/<name> - Get vector layer GeoJSON (rate limited)")
     logger.info("  /api/vector/bounds - Get vector layers bounds")
-    logger.info("  /api/capabilities - Get WMS capabilities (XML)")
+    logger.info("  /api/capabilities - Get WMS capabilities (XML, rate limited)")
     logger.info("  /api/legend/<layer> - Get legend URL for a layer")
 
     if VECTOR_SUPPORT:
@@ -525,10 +701,14 @@ if __name__ == "__main__":
     logger.info("-" * 60)
 
     port = int(os.environ.get('FLASK_RUN_PORT', 5000))
+    # Default to laguna.ku.lt for deployment - use FLASK_HOST to override
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
+
+    # Determine public URL for deployment
+    public_url = os.environ.get('PUBLIC_URL', 'http://laguna.ku.lt:5000')
 
     logger.info(f"\nServer accessible at:")
     logger.info(f"   Local:    http://127.0.0.1:{port}")
-    logger.info(f"   Network:  http://{host}:{port}")
+    logger.info(f"   Network:  {public_url}")
 
     app.run(debug=config.DEBUG, host=host, port=port)

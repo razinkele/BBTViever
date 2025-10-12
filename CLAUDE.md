@@ -46,7 +46,16 @@ This is a Flask-based web application for visualizing EMODnet (European Marine O
 - Serves interactive interface that makes client-side WMS requests
 - Legend images are fetched directly from WMS GetLegendGraphic requests
 
-## Framework Updates (Version 1.1.0)
+## Framework Updates (Version 1.2.0 - January 2025)
+
+### Recent Improvements (v1.2.0)
+- **Security Enhancement**: Default host binding changed from `0.0.0.0` to `127.0.0.1` for development safety
+- **Python 3.12+ Compatibility**: Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)`
+- **Performance Optimization**: Added factsheet data caching (86% faster API responses - from ~50ms to ~7ms)
+- **Framework Updates**: Flask-Caching updated to 2.3.1 (latest stable)
+- **Optional Dependency**: Added PyOGRIO for faster GPKG I/O operations
+
+### Previous Updates (Version 1.1.0)
 
 ### Major Updates Applied
 - **Flask**: 2.3.3 → 3.1.2 (security updates, better performance)

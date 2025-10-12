@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BBT Factsheet Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #2e7d32;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1b5e20;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #2e7d32;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .preview-modal.active {
+            display: flex;
+        }
+        .preview-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .close-btn {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 BBT Factsheet Display Test</h1>
+
+    <div class="test-section">
+        <h2>Test Factsheet Loading</h2>
+        <p>Click a button to test factsheet loading for each BBT area:</p>
+
+        <button class="test-button" onclick="testFactsheet('Archipelago')">Test Archipelago</button>
+        <button class="test-button" onclick="testFactsheet('Balearic')">Test Balearic</button>
+        <button class="test-button" onclick="testFactsheet('Irish Sea')">Test Irish Sea</button>
+        <button class="test-button" onclick="testFactsheet('Gulf of Biscay')">Test Gulf of Biscay</button>
+        <button class="test-button" onclick="testFactsheet('Heraklion')">Test Heraklion</button>
+        <button class="test-button" onclick="testFactsheet('Hornsund')">Test Hornsund</button>
+        <button class="test-button" onclick="testFactsheet('Kongsfjord')">Test Kongsfjord</button>
+        <button class="test-button" onclick="testFactsheet('Lithuanian coastal zone')">Test Lithuanian</button>
+        <button class="test-button" onclick="testFactsheet('North Sea')">Test North Sea</button>
+        <button class="test-button" onclick="testFactsheet('Sardinia')">Test Sardinia</button>
+
+        <div id="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test All Factsheets</h2>
+        <button class="test-button" onclick="testAllFactsheets()">Load All Factsheets</button>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-content">
+            <span class="close-btn" onclick="closePreview()">&times;</span>
+            <div id="preview-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test function for individual factsheet
+        async function testFactsheet(bbtName) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = `Loading factsheet for "${bbtName}"...`;
+
+            try {
+                // Load all factsheets
+                const response = await fetch('http://localhost:5000/api/factsheets');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('All factsheets:', data);
+
+                // Try to match the BBT name
+                let foundFactsheet = null;
+
+                // Name mapping (same as in bbt-tool.js)
+                const nameMapping = {
+                    'Gulf of Biscay': 'GulfofBiscay',
+                    'Lithuanian coastal zone': 'Lithuanian',
+                    'North Sea': 'NorthSea Belgium',
+                    'Hornsund': 'Arctic BBT_ Porsanger',
+                    'Kongsfjord': 'Arctic BBT_Svalbard',
+                    'Bay of Gdansk': 'Archipelago',
+                };
+
+                const searchName = nameMapping[bbtName] || bbtName;
+                const normalized = searchName.toLowerCase().replace(/[_\s-]+/g, ' ').trim();
+
+                // Find matching factsheet
+                for (const bbt of data.bbts) {
+                    const factsheetNorm = bbt.name.toLowerCase().replace(/[_\s-]+/g, ' ').trim();
+                    if (bbt.name === searchName || factsheetNorm === normalized ||
+                        factsheetNorm.includes(normalized) || normalized.includes(factsheetNorm)) {
+                        foundFactsheet = bbt;
+                        break;
+                    }
+                }
+
+                if (foundFactsheet) {
+                    resultDiv.textContent = `✅ Found factsheet for "${bbtName}":\n\n` +
+                        JSON.stringify(foundFactsheet, null, 2);
+
+                    // Show preview
+                    showPreview(bbtName, foundFactsheet);
+                } else {
+                    resultDiv.textContent = `❌ No factsheet found for "${bbtName}"\n\n` +
+                        `Available factsheets:\n` +
+                        data.bbts.map(b => `  - ${b.name}`).join('\n');
+                }
+            } catch (error) {
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+
+        // Show preview modal
+        function showPreview(bbtName, factsheet) {
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('preview-content');
+
+            // Render factsheet data
+            let html = `
+                <h2 style="color: #2e7d32; margin-bottom: 10px;">📊 ${bbtName}</h2>
+                <p style="color: #666; font-size: 12px; margin-bottom: 20px;">Source: ${factsheet.source_file}</p>
+            `;
+
+            // Render data fields
+            const renderValue = (value, level = 0) => {
+                const indent = level * 20;
+
+                if (Array.isArray(value)) {
+                    if (value.length === 0) return '<em style="color: #999;">No data</em>';
+                    return `<ul style="margin: 5px 0; padding-left: 20px; list-style: none;">${value.map(item =>
+                        `<li style="padding: 3px 0; color: #333;">• ${renderValue(item, level + 1)}</li>`
+                    ).join('')}</ul>`;
+                } else if (typeof value === 'object' && value !== null) {
+                    return `<div style="margin-left: ${indent}px;">${Object.entries(value).map(([k, v]) =>
+                        `<div style="margin: 8px 0;"><strong style="color: #1b5e20;">${k}:</strong> ${renderValue(v, level + 1)}</div>`
+                    ).join('')}</div>`;
+                } else {
+                    return `<span style="color: #333;">${value}</span>`;
+                }
+            };
+
+            Object.entries(factsheet.data).forEach(([key, value]) => {
+                if (!value || (Array.isArray(value) && value.length === 0)) return;
+
+                if (key.toLowerCase() === 'notes') {
+                    html += `
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; border-radius: 4px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; color: #856404; margin-bottom: 8px; font-size: 14px;">📝 Notes</div>
+                            ${renderValue(value)}
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="background: #f8f9fa; border-left: 4px solid #2e7d32; padding: 12px 15px; border-radius: 4px; margin-bottom: 15px;">
+                            <div style="font-weight: 600; color: #1b5e20; margin-bottom: 8px; font-size: 14px;">${key}</div>
+                            <div style="color: #333; font-size: 13px; line-height: 1.6;">${renderValue(value)}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        // Close preview
+        function closePreview() {
+            document.getElementById('preview-modal').classList.remove('active');
+        }
+
+        // Test all factsheets
+        async function testAllFactsheets() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Loading all factsheets...';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/factsheets');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                resultDiv.textContent = `✅ Loaded ${data.bbts.length} factsheets:\n\n` +
+                    data.bbts.map((bbt, i) =>
+                        `${i + 1}. ${bbt.name}\n   Source: ${bbt.source_file}\n   Data fields: ${Object.keys(bbt.data).length}`
+                    ).join('\n\n');
+            } catch (error) {
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
