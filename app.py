@@ -51,8 +51,30 @@ app.config.from_object(config)
 setup_logging(config.LOG_LEVEL, config.LOG_FILE)
 logger = get_logger(__name__)
 
-# Initialize Flask-Caching
-cache = Cache(app, config={'CACHE_TYPE': config.CACHE_TYPE, 'CACHE_DEFAULT_TIMEOUT': config.CACHE_DEFAULT_TIMEOUT})
+# Initialize Flask-Caching with comprehensive configuration
+cache_config = {
+    'CACHE_TYPE': config.CACHE_TYPE,
+    'CACHE_DEFAULT_TIMEOUT': config.CACHE_DEFAULT_TIMEOUT,
+}
+
+# Add Redis-specific configuration if using Redis
+if config.CACHE_TYPE == 'redis':
+    if config.CACHE_REDIS_URL:
+        cache_config['CACHE_REDIS_URL'] = config.CACHE_REDIS_URL
+    else:
+        cache_config['CACHE_REDIS_HOST'] = config.CACHE_REDIS_HOST
+        cache_config['CACHE_REDIS_PORT'] = config.CACHE_REDIS_PORT
+        cache_config['CACHE_REDIS_DB'] = config.CACHE_REDIS_DB
+        if config.CACHE_REDIS_PASSWORD:
+            cache_config['CACHE_REDIS_PASSWORD'] = config.CACHE_REDIS_PASSWORD
+
+# Add filesystem cache configuration if using filesystem
+elif config.CACHE_TYPE == 'filesystem':
+    cache_config['CACHE_DIR'] = config.CACHE_DIR
+    cache_config['CACHE_THRESHOLD'] = config.CACHE_THRESHOLD
+
+cache = Cache(app, config=cache_config)
+logger.info(f"Cache initialized with type: {config.CACHE_TYPE}")
 
 # Initialize Flask-Limiter for API rate limiting
 limiter = Limiter(

@@ -45,9 +45,22 @@ class Config:
     ENABLE_VECTOR_SUPPORT = os.getenv('ENABLE_VECTOR_SUPPORT', 'True').lower() == 'true'
 
     # Caching settings
+    # Options: 'simple' (in-memory), 'redis', 'memcached', 'filesystem'
     CACHE_TYPE = os.getenv('CACHE_TYPE', 'simple')
     CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT', '3600'))
     WMS_CACHE_TIMEOUT = int(os.getenv('WMS_CACHE_TIMEOUT', '300'))  # 5 minutes
+
+    # Redis cache configuration (used when CACHE_TYPE='redis')
+    CACHE_REDIS_HOST = os.getenv('CACHE_REDIS_HOST', 'localhost')
+    CACHE_REDIS_PORT = int(os.getenv('CACHE_REDIS_PORT', '6379'))
+    CACHE_REDIS_DB = int(os.getenv('CACHE_REDIS_DB', '0'))
+    CACHE_REDIS_PASSWORD = os.getenv('CACHE_REDIS_PASSWORD', None)
+    # Redis connection URL format: redis://[:password]@host:port/db
+    CACHE_REDIS_URL = os.getenv('CACHE_REDIS_URL', None)  # Override individual settings if set
+
+    # Filesystem cache configuration (used when CACHE_TYPE='filesystem')
+    CACHE_DIR = os.getenv('CACHE_DIR', 'cache')
+    CACHE_THRESHOLD = int(os.getenv('CACHE_THRESHOLD', '1000'))  # Max items in filesystem cache
 
     # Layer filtering configuration
     CORE_EUROPEAN_LAYER_COUNT = int(os.getenv('CORE_EUROPEAN_LAYER_COUNT', '6'))

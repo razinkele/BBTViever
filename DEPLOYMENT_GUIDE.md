@@ -378,5 +378,329 @@ These files are kept for historical reference but may contain outdated informati
 
 ---
 
-**Last Updated**: 2025-10-04
-**Version**: 1.1.0 (Post-optimization cleanup)
+---
+
+## Advanced Production Features (v1.2.0+)
+
+### Redis Caching Setup
+
+For multi-worker deployments, Redis provides shared caching across all workers:
+
+#### 1. Install Redis
+
+```bash
+sudo apt-get update
+sudo apt-get install redis-server
+```
+
+#### 2. Configure Redis (Optional Security)
+
+```bash
+sudo nano /etc/redis/redis.conf
+```
+
+Add/modify:
+```
+# Bind to localhost only
+bind 127.0.0.1
+
+# Set password (optional but recommended)
+requirepass your-strong-password-here
+
+# Set max memory
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+```
+
+#### 3. Update Application Configuration
+
+Edit `.env` on server:
+```bash
+CACHE_TYPE=redis
+CACHE_REDIS_HOST=localhost
+CACHE_REDIS_PORT=6379
+CACHE_REDIS_DB=0
+CACHE_REDIS_PASSWORD=your-strong-password-here
+```
+
+#### 4. Restart Services
+
+```bash
+sudo systemctl restart redis-server
+sudo systemctl restart marbefes-bbt
+```
+
+#### 5. Verify Redis Caching
+
+```bash
+# Check Redis is running
+redis-cli ping  # Should return PONG
+
+# Monitor cache activity
+redis-cli monitor  # Watch real-time commands
+
+# Check cache statistics
+redis-cli INFO stats
+```
+
+### Automated Monitoring
+
+#### Setting Up Health Monitoring
+
+The application includes `monitor_health.py` for automated monitoring:
+
+```bash
+# Basic health check
+python monitor_health.py --url http://laguna.ku.lt/BBTS
+
+# JSON output for integration
+python monitor_health.py --url http://laguna.ku.lt/BBTS --json
+
+# Quiet mode (only exit codes)
+python monitor_health.py --url http://laguna.ku.lt/BBTS --quiet
+# Exit codes: 0=healthy, 1=degraded, 2=unhealthy, 3=connection error
+```
+
+#### Cron Job for Periodic Checks
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add monitoring (every 5 minutes)
+*/5 * * * * /var/www/marbefes-bbt/venv/bin/python /var/www/marbefes-bbt/monitor_health.py --url http://laguna.ku.lt/BBTS --quiet || echo "ALERT: MARBEFES BBT health check failed" | mail -s "MARBEFES Alert" admin@example.com
+```
+
+#### Slack Integration
+
+```bash
+# Get Slack webhook URL from: https://api.slack.com/messaging/webhooks
+# Add to monitoring script:
+python monitor_health.py \
+  --url http://laguna.ku.lt/BBTS \
+  --slack-webhook "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+```
+
+### Automated Testing
+
+#### Running API Tests
+
+```bash
+# Run all tests
+pytest tests/test_api_endpoints.py -v
+
+# Run specific test class
+pytest tests/test_api_endpoints.py::TestAPIEndpoints -v
+
+# Run with coverage
+pytest tests/test_api_endpoints.py --cov=app --cov-report=html
+
+# Generate coverage report
+open htmlcov/index.html  # View in browser
+```
+
+#### Integration Tests in CI/CD
+
+Example GitHub Actions workflow:
+
+```yaml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      - name: Run tests
+        run: pytest tests/ -v --cov=app
+```
+
+### Performance Optimization
+
+#### Monitoring Performance Metrics
+
+```bash
+# Check request times
+tail -f logs/gunicorn_access.log | awk '{print $(NF-1)}'
+
+# Monitor memory usage per worker
+ps aux | grep gunicorn | awk '{print $2,$4,$11}' | column -t
+
+# Check cache hit rates (Redis)
+redis-cli INFO stats | grep -E "keyspace_hits|keyspace_misses"
+```
+
+#### Tuning Gunicorn Workers
+
+```bash
+# Calculate optimal workers
+# Formula: (2 x CPU cores) + 1
+python -c "import multiprocessing; print(f'Recommended workers: {multiprocessing.cpu_count() * 2 + 1}')"
+
+# Edit gunicorn_config.py
+nano /var/www/marbefes-bbt/gunicorn_config.py
+# Update: workers = 17  # or calculated value
+
+# Restart
+sudo systemctl restart marbefes-bbt
+```
+
+### Security Enhancements
+
+#### 1. SECRET_KEY Management
+
+```bash
+# Generate secure key
+python -c 'import secrets; print(secrets.token_hex(32))'
+
+# Add to .env (NEVER commit to git!)
+echo "SECRET_KEY=<generated-key>" >> .env
+chmod 600 .env
+```
+
+#### 2. Rate Limiting Configuration
+
+Rate limiting is configured in `app.py`:
+
+```python
+# Default limits
+limiter = Limiter(
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Endpoint-specific limits
+@app.route("/api/vector/layer/<name>")
+@limiter.limit("10 per minute")  # Stricter for expensive operations
+```
+
+#### 3. Security Headers
+
+Automatic security headers are set in `app.py:81-93`:
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: SAMEORIGIN
+- X-XSS-Protection: 1; mode=block
+- HSTS (production only with HTTPS)
+
+Verify with:
+```bash
+curl -I http://laguna.ku.lt/BBTS | grep -E "^X-"
+```
+
+### Backup and Disaster Recovery
+
+#### Automated Backup Script
+
+Create `/usr/local/bin/backup-marbefes.sh`:
+
+```bash
+#!/bin/bash
+BACKUP_DIR=/backup/marbefes-bbt
+DATE=$(date +%Y%m%d-%H%M%S)
+APP_DIR=/var/www/marbefes-bbt
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
+# Backup application files
+tar -czf $BACKUP_DIR/app-$DATE.tar.gz \
+    -C $APP_DIR \
+    --exclude='venv' \
+    --exclude='__pycache__' \
+    --exclude='*.pyc' \
+    --exclude='cache' \
+    --exclude='logs' \
+    .
+
+# Backup environment file
+cp $APP_DIR/.env $BACKUP_DIR/env-$DATE 2>/dev/null || true
+
+# Backup Redis data (if using Redis)
+if systemctl is-active redis-server >/dev/null; then
+    redis-cli SAVE
+    cp /var/lib/redis/dump.rdb $BACKUP_DIR/redis-$DATE.rdb
+fi
+
+# Keep only last 30 days
+find $BACKUP_DIR -name "app-*.tar.gz" -mtime +30 -delete
+find $BACKUP_DIR -name "env-*" -mtime +30 -delete
+find $BACKUP_DIR -name "redis-*.rdb" -mtime +30 -delete
+
+echo "Backup completed: $BACKUP_DIR/app-$DATE.tar.gz"
+```
+
+Make executable and add to cron:
+```bash
+sudo chmod +x /usr/local/bin/backup-marbefes.sh
+sudo crontab -e
+
+# Daily backup at 2 AM
+0 2 * * * /usr/local/bin/backup-marbefes.sh
+```
+
+#### Restore Procedure
+
+```bash
+# List available backups
+ls -lh /backup/marbefes-bbt/
+
+# Stop service
+sudo systemctl stop marbefes-bbt
+
+# Restore from backup
+tar -xzf /backup/marbefes-bbt/app-YYYYMMDD-HHMMSS.tar.gz -C /var/www/marbefes-bbt/
+
+# Restore environment
+cp /backup/marbefes-bbt/env-YYYYMMDD-HHMMSS /var/www/marbefes-bbt/.env
+
+# Start service
+sudo systemctl start marbefes-bbt
+```
+
+---
+
+## Changelog
+
+### Version 1.2.0 (October 2025)
+
+**New Features:**
+- ✨ Redis caching support for distributed deployments
+- ✨ Automated health monitoring with Slack/email alerts
+- ✨ Comprehensive API endpoint test suite (19 tests)
+- ✨ Production deployment scripts (Gunicorn + systemd)
+- ✨ Enhanced security headers and rate limiting
+
+**Improvements:**
+- ⚡ Updated Flask-Caching to 2.3.1
+- ⚡ Updated pandas to 2.2.3
+- ⚡ Enhanced error handling and logging
+- ⚡ Improved cache configuration system
+
+**Documentation:**
+- 📚 Comprehensive deployment guide
+- 📚 Monitoring and troubleshooting procedures
+- 📚 Security best practices
+- 📚 Backup and recovery procedures
+
+### Version 1.1.0 (September 2025)
+
+**Framework Updates:**
+- Major framework upgrades (Flask 3.1.2, GeoPandas 1.1.1)
+- Performance optimizations
+- Code quality improvements
+
+### Version 1.0.0 (August 2025)
+
+- Initial production release
+
+---
+
+**Last Updated**: 2025-10-13
+**Version**: 1.2.0 (Production enhancements with monitoring and testing)
