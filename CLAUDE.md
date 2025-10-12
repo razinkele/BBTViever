@@ -46,9 +46,26 @@ This is a Flask-based web application for visualizing EMODnet (European Marine O
 - Serves interactive interface that makes client-side WMS requests
 - Legend images are fetched directly from WMS GetLegendGraphic requests
 
-## Framework Updates (Version 1.2.0 - January 2025)
+## Framework Updates (Version 1.2.2 - October 2025)
 
-### Recent Improvements (v1.2.0)
+### Latest Release (v1.2.2)
+- **New Feature**: Draggable floating EUNIS 2019 legend
+  * Interactive checkbox toggle in sidebar
+  * On-demand WMS GetLegendGraphic loading
+  * Full drag-and-drop functionality (mouse + touch support)
+  * GPU-accelerated CSS transforms for smooth movement
+  * Position memory during session
+  * Modern UI with slide-in animations
+- **User Experience**: Legend can be repositioned anywhere on screen
+- **Files Modified**: `templates/index.html` (+174 lines), `static/css/styles.css` (+103 lines)
+
+### Previous Release (v1.2.1)
+- **Critical Fix**: Resolved BBT vector layer display issue (pandas/pyogrio compatibility)
+- **Dependency Change**: Downgraded pandas from 2.2.3 to 2.0.3 for pyogrio 0.11.1 compatibility
+- **Error Handling**: Enhanced vector loader with robust fiona fallback and numpy type conversion
+- **Testing**: Verified all 11 BBT areas loading successfully
+
+### Previous Release (v1.2.0)
 - **Security Enhancement**: Default host binding changed from `0.0.0.0` to `127.0.0.1` for development safety
 - **Python 3.12+ Compatibility**: Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)`
 - **Performance Optimization**: Added factsheet data caching (86% faster API responses - from ~50ms to ~7ms)
@@ -135,10 +152,51 @@ The application includes predefined layers from EMODnet (`app.py:17-48`):
 - No build process required - uses CDN resources (Leaflet 1.9.4)
 - Inline CSS and JavaScript within the HTML template
 - Responsive design with sidebar/map layout
+- Modular JavaScript with drag-and-drop functionality
 
 ### Styling Approach
 - Custom CSS with gradient backgrounds and modern UI elements
 - Hover effects and transitions for interactive elements
 - Mobile-responsive design considerations
+- CSS animations for smooth UI transitions
+
+### EUNIS Legend Feature (`templates/index.html:125-131, 279-598`)
+The application includes an interactive floating legend for EUNIS 2019 habitat classification:
+
+#### User Interface
+- **Checkbox Toggle**: Located in sidebar under "Available Layers" section
+- **Floating Container**: Fixed positioning at bottom-left (340px from left edge)
+- **Draggable Header**: Click and drag title bar to reposition anywhere on screen
+- **Close Options**: Uncheck checkbox or click X button in header
+
+#### Technical Implementation
+- **On-Demand Loading**: Legend fetched only when checkbox is checked
+- **WMS Integration**: Uses GetLegendGraphic API from EMODnet service
+  ```
+  https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms?
+  SERVICE=WMS&VERSION=1.1.0&REQUEST=GetLegendGraphic&
+  FORMAT=image/png&LAYER=eusm_2023_eunis2019_full
+  ```
+- **Drag System**: Full mouse and touch event handling
+  * `makeLegendDraggable()` - Initializes drag functionality
+  * Mouse events: mousedown, mousemove, mouseup
+  * Touch events: touchstart, touchmove, touchend
+  * CSS transforms for GPU-accelerated movement
+- **Smart Detection**: Prevents drag when clicking close button
+- **Position Memory**: Maintains position until page reload
+
+#### CSS Styling (`static/css/styles.css:858-952`)
+- `.floating-eunis-legend` - Main container with fixed positioning
+- `.floating-eunis-legend-header` - Draggable header with grab cursor
+- `@keyframes slideInUp` - Smooth appearance animation
+- Loading and error state styling
+
+#### JavaScript Functions (`templates/index.html:448-595`)
+- `toggleEunisLegend()` - Show/hide based on checkbox state
+- `showEunisLegend()` - Display legend and load image if needed
+- `hideEunisLegend()` - Hide legend container
+- `closeEunisLegend()` - Close via button and uncheck checkbox
+- `loadEunisLegendImage()` - Fetch legend from WMS service
+- `makeLegendDraggable()` - Initialize drag-and-drop system
 
 When modifying this application, preserve the single-file architecture and ensure WMS integration remains functional with the EMODnet infrastructure.
