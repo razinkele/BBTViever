@@ -122,6 +122,14 @@
 
             <h3>Available Layers</h3>
 
+            <!-- EUNIS Legend Toggle -->
+            <div class="control-group" style="margin-bottom: 15px;">
+                <label for="eunis-legend-toggle" style="display: flex; align-items: center; cursor: pointer; font-size: 13px;">
+                    <input type="checkbox" id="eunis-legend-toggle" style="margin-right: 8px; cursor: pointer;">
+                    Show EUNIS 2019 Legend
+                </label>
+            </div>
+
             <!-- Collapsible EMODnet Overlay Section -->
             <div class="control-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px;" onclick="toggleEmodnetPanel()">
@@ -268,6 +276,17 @@
         <div class="status" id="status">Ready</div>
     </div>
 
+    <!-- Floating EUNIS Legend -->
+    <div class="floating-eunis-legend" id="floating-eunis-legend">
+        <div class="floating-eunis-legend-header">
+            <h4 class="floating-eunis-legend-title">🗺️ EUNIS 2019 Habitat Legend</h4>
+            <button class="floating-eunis-legend-close" onclick="closeEunisLegend()" title="Close legend">&times;</button>
+        </div>
+        <div class="floating-eunis-legend-content" id="eunis-legend-content">
+            <div class="eunis-legend-loading">Loading legend...</div>
+        </div>
+    </div>
+
     <!-- BBT Data Popup Modal -->
     <div class="bbt-popup-overlay" id="bbt-popup-overlay">
         <div class="bbt-popup">
@@ -299,11 +318,11 @@
                     <table class="version-table">
                         <tr>
                             <td><strong>Version:</strong></td>
-                            <td>1.2.0</td>
+                            <td>1.2.1</td>
                         </tr>
                         <tr>
                             <td><strong>Release Date:</strong></td>
-                            <td>January 12, 2025</td>
+                            <td>October 13, 2025</td>
                         </tr>
                         <tr>
                             <td><strong>Deployment:</strong></td>
@@ -421,6 +440,157 @@
             if (event.key === 'Escape') {
                 closeVersionInfo();
             }
+        });
+    </script>
+
+    <!-- EUNIS Legend Functions -->
+    <script>
+        // EUNIS Legend Control
+        const EUNIS_LAYER_NAME = 'eusm_2023_eunis2019_full';
+
+        function toggleEunisLegend() {
+            const checkbox = document.getElementById('eunis-legend-toggle');
+            const legend = document.getElementById('floating-eunis-legend');
+
+            if (checkbox.checked) {
+                showEunisLegend();
+            } else {
+                hideEunisLegend();
+            }
+        }
+
+        function showEunisLegend() {
+            const legend = document.getElementById('floating-eunis-legend');
+            const content = document.getElementById('eunis-legend-content');
+
+            // Show the legend container
+            legend.classList.add('visible');
+
+            // Load legend image if not already loaded
+            if (content.querySelector('img') === null) {
+                loadEunisLegendImage();
+            }
+        }
+
+        function hideEunisLegend() {
+            const legend = document.getElementById('floating-eunis-legend');
+            legend.classList.remove('visible');
+        }
+
+        function closeEunisLegend() {
+            const checkbox = document.getElementById('eunis-legend-toggle');
+            checkbox.checked = false;
+            hideEunisLegend();
+        }
+
+        function loadEunisLegendImage() {
+            const content = document.getElementById('eunis-legend-content');
+            const wmsUrl = window.AppConfig.WMS_BASE_URL || 'https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms';
+
+            // Build GetLegendGraphic URL for EUNIS 2019 layer
+            const legendUrl = `${wmsUrl}?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${EUNIS_LAYER_NAME}&LEGEND_OPTIONS=fontAntiAliasing:true;fontSize:11;dpi:96`;
+
+            // Create image element
+            const img = document.createElement('img');
+            img.src = legendUrl;
+            img.alt = 'EUNIS 2019 Legend';
+            img.style.width = '100%';
+
+            // Handle load success
+            img.onload = function() {
+                content.innerHTML = '';
+                content.appendChild(img);
+            };
+
+            // Handle load error
+            img.onerror = function() {
+                content.innerHTML = '<div class="eunis-legend-error">❌ Failed to load legend. Please check your connection.</div>';
+            };
+
+            // Show loading state
+            content.innerHTML = '<div class="eunis-legend-loading">⏳ Loading EUNIS 2019 legend...</div>';
+        }
+
+        // Make legend draggable
+        function makeLegendDraggable() {
+            const legend = document.getElementById('floating-eunis-legend');
+            const header = legend.querySelector('.floating-eunis-legend-header');
+
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            // Touch support for mobile
+            header.addEventListener('touchstart', dragStart);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('touchend', dragEnd);
+
+            function dragStart(e) {
+                // Don't drag if clicking on close button
+                if (e.target.closest('.floating-eunis-legend-close')) {
+                    return;
+                }
+
+                if (e.type === 'touchstart') {
+                    initialX = e.touches[0].clientX - xOffset;
+                    initialY = e.touches[0].clientY - yOffset;
+                } else {
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                }
+
+                if (e.target === header || e.target.closest('.floating-eunis-legend-header')) {
+                    isDragging = true;
+                }
+            }
+
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+
+                    if (e.type === 'touchmove') {
+                        currentX = e.touches[0].clientX - initialX;
+                        currentY = e.touches[0].clientY - initialY;
+                    } else {
+                        currentX = e.clientX - initialX;
+                        currentY = e.clientY - initialY;
+                    }
+
+                    xOffset = currentX;
+                    yOffset = currentY;
+
+                    setTranslate(currentX, currentY, legend);
+                }
+            }
+
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            }
+
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+        }
+
+        // Attach event listener to checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('eunis-legend-toggle');
+            if (checkbox) {
+                checkbox.addEventListener('change', toggleEunisLegend);
+            }
+
+            // Initialize drag functionality
+            makeLegendDraggable();
         });
     </script>
 </body>
