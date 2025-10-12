@@ -131,19 +131,50 @@ class VectorLayerLoader:
     def load_vector_layer(self, gpkg_path: Path, layer_name: str) -> Optional[VectorLayer]:
         """Load a specific layer from a GPKG file"""
         try:
-            # Read the layer using pyogrio engine with force_2d option
-            # This handles Z-coordinate stripping at I/O level (most efficient)
+            # Use fiona engine directly due to pandas 2.2.3 + pyogrio 0.11.1 compatibility issue
+            # (numpy.ndarray dtype conversion error)
+            gdf = None
             try:
+                # Try pyogrio first (if it works with your pandas version)
                 gdf = gpd.read_file(str(gpkg_path), layer=layer_name, engine='pyogrio', force_2d=True)
+                self.logger.debug(f"Successfully loaded with pyogrio engine")
             except Exception as e:
-                # Fallback to fiona engine (doesn't support force_2d, so convert manually)
-                self.logger.debug(f"Pyogrio failed, falling back to fiona: {e}")
-                gdf = gpd.read_file(str(gpkg_path), layer=layer_name, engine='fiona')
+                # Fallback to fiona direct read to avoid pandas/numpy dtype issues
+                self.logger.debug(f"Pyogrio failed ({str(e)[:60]}...), using fiona direct read")
 
-                # Only convert if fiona was used AND geometries have Z coords
-                if gdf.geometry.has_z.any():
-                    self.logger.info(f"Converting 3D geometries to 2D for layer {layer_name}")
-                    gdf.geometry = gdf.geometry.apply(lambda geom: self._force_2d(geom) if geom else geom)
+                # Use fiona directly to avoid pandas/numpy dtype issues
+                import fiona
+                from shapely.geometry import shape
+
+                with fiona.open(str(gpkg_path), layer=layer_name) as src:
+                    # Manually construct GeoDataFrame from features
+                    features = []
+                    geometries = []
+
+                    for feature in src:
+                        geom = shape(feature['geometry'])
+                        # Force 2D if needed
+                        if geom.has_z:
+                            geom = self._force_2d(geom)
+                        geometries.append(geom)
+                        # Convert all property values to Python native types
+                        properties = {}
+                        for key, value in feature['properties'].items():
+                            # Handle numpy arrays and other non-native types
+                            if hasattr(value, 'item'):  # numpy scalar
+                                properties[key] = value.item()
+                            elif hasattr(value, 'tolist'):  # numpy array
+                                properties[key] = value.tolist()
+                            else:
+                                properties[key] = value
+                        features.append(properties)
+
+                    # Create GeoDataFrame
+                    import pandas as pd
+                    df = pd.DataFrame(features)
+                    gdf = gpd.GeoDataFrame(df, geometry=geometries, crs=src.crs)
+
+                self.logger.info(f"Successfully loaded {len(gdf)} features using fiona direct read")
 
             if gdf.empty:
                 self.logger.warning(f"Layer {layer_name} in {gpkg_path} is empty")
