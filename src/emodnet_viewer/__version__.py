@@ -11,10 +11,10 @@ Attributes:
     __version_name__ (str): Friendly release name
 """
 
-__version__ = "1.2.2"
-__version_info__ = (1, 2, 2)
+__version__ = "1.2.3"
+__version_info__ = (1, 2, 3)
 __version_date__ = "2025-10-13"
-__version_name__ = "EUNIS Legend & Debug Logging"
+__version_name__ = "Code Quality Improvements"
 
 
 def get_version_string() -> str:
