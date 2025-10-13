@@ -11,10 +11,10 @@ Attributes:
     __version_name__ (str): Friendly release name
 """
 
-__version__ = "1.2.3"
-__version_info__ = (1, 2, 3)
+__version__ = "1.2.4"
+__version_info__ = (1, 2, 4)
 __version_date__ = "2025-10-13"
-__version_name__ = "Code Quality Improvements"
+__version_name__ = "P1 Performance Optimizations"
 
 
 def get_version_string() -> str:

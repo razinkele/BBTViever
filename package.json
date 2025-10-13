@@ -1,0 +1,31 @@
+{
+  "name": "marbefes-bbt-database",
+  "version": "1.2.4",
+  "description": "MARBEFES BBT Database - Marine Biodiversity and Ecosystem Functioning Database",
+  "private": true,
+  "scripts": {
+    "build": "rollup -c",
+    "build:prod": "NODE_ENV=production rollup -c",
+    "watch": "rollup -c -w",
+    "dev": "rollup -c -w"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.9.0",
+    "terser": "^5.44.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "marine",
+    "biodiversity",
+    "gis",
+    "emodnet",
+    "leaflet"
+  ],
+  "author": "MARBEFES Project",
+  "license": "SEE LICENSE IN LICENSE"
+}

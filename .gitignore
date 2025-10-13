@@ -84,3 +84,13 @@ www/
 
 # Test files
 static/test_*.html
+
+# Node.js / NPM
+node_modules/
+package-lock.json
+
+# Build artifacts
+# Note: We track the bundle in git for easy deployment, but can be rebuilt with build_bundle.py
+# static/dist/app.bundle.js
+# static/dist/app.bundle.min.js
+# static/dist/app.bundle.min.js.map

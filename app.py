@@ -14,6 +14,7 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_compress import Compress
 import requests
 
 # Add src and config directories to path
@@ -85,6 +86,22 @@ limiter = Limiter(
     storage_uri="memory://",
     strategy="fixed-window"
 )
+
+# Initialize Flask-Compress for response compression (P1 optimization)
+# Compresses JSON, GeoJSON, HTML, CSS, JavaScript responses automatically
+compress = Compress()
+app.config['COMPRESS_MIMETYPES'] = [
+    'application/json',
+    'application/geo+json',
+    'text/html',
+    'text/css',
+    'text/javascript',
+    'application/javascript'
+]
+app.config['COMPRESS_LEVEL'] = 6  # Balance between speed (1=fast) and compression (9=best)
+app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
+compress.init_app(app)
+logger.info(f"Response compression enabled (level: {app.config['COMPRESS_LEVEL']}, min size: {app.config['COMPRESS_MIN_SIZE']} bytes)")
 
 # Initialize requests session with connection pooling for WMS requests
 # Connection pooling provides 20-40% performance improvement for repeated WMS calls
@@ -667,6 +684,64 @@ def api_legend(layer_name):
         f"layer={layer_name}&format=image/png"
     )
     return jsonify({"legend_url": legend_url})
+
+
+@app.route("/api/metrics", methods=["POST"])
+@limiter.limit("30 per minute")  # Allow reasonable metric submission rate
+def api_metrics():
+    """
+    API endpoint to receive client-side performance metrics (P1 Optimization)
+
+    Collects performance data from the Performance Monitoring API for analysis
+    """
+    try:
+        data = request.json
+        if not data or 'metrics' not in data:
+            return jsonify({"error": "No metrics provided"}), 400
+
+        metrics = data.get('metrics', [])
+        user_agent = data.get('userAgent', 'unknown')
+        connection = data.get('connection', {})
+
+        # Log metrics for analysis (in production, send to monitoring service)
+        for metric in metrics[:10]:  # Limit to first 10 for logging
+            metric_type = metric.get('type', 'unknown')
+
+            if metric_type == 'layer_load':
+                logger.info(
+                    f"Performance metric: Layer load '{metric.get('name')}' "
+                    f"took {metric.get('duration', 0):.0f}ms "
+                    f"({'cache hit' if metric.get('cacheHit') else 'network'})"
+                )
+            elif metric_type == 'navigation':
+                logger.info(
+                    f"Performance metric: Page load took {metric.get('total_time', 0):.0f}ms "
+                    f"(DOM: {metric.get('dom_load', 0):.0f}ms)"
+                )
+            elif metric_type == 'resource':
+                if metric.get('duration', 0) > 100:  # Only log slow resources
+                    logger.info(
+                        f"Performance metric: Slow resource '{metric.get('name')}' "
+                        f"took {metric.get('duration', 0):.0f}ms "
+                        f"({metric.get('size', 0)} bytes)"
+                    )
+
+        # Log connection info if available
+        if connection and connection.get('effectiveType'):
+            logger.debug(
+                f"Client connection: {connection.get('effectiveType')} "
+                f"(downlink: {connection.get('downlink', 0)}Mbps, "
+                f"rtt: {connection.get('rtt', 0)}ms)"
+            )
+
+        return jsonify({
+            "status": "recorded",
+            "count": len(metrics)
+        })
+
+    except Exception as e:
+        logger.error(f"Error in api_metrics: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/test")
