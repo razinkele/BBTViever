@@ -151,22 +151,22 @@ const BBTTool = (function() {
      * @throws {Error} If API request fails or returns non-OK status
      */
     async function loadBBTFeatures() {
-        console.log('🔄 Loading BBT features from API...');
+        debug.log('🔄 Loading BBT features from API...');
 
         try {
             const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Merged')}`;
-            console.log('📡 Fetching from URL:', apiUrl);
+            debug.log('📡 Fetching from URL:', apiUrl);
 
             const response = await fetch(apiUrl);
-            console.log('📥 API Response status:', response.status);
+            debug.log('📥 API Response status:', response.status);
 
             if (response.ok) {
                 bbtFeatureData = await response.json();
-                console.log('✅ BBT features loaded successfully:', bbtFeatureData.features ? bbtFeatureData.features.length : 0, 'features');
+                debug.log('✅ BBT features loaded successfully:', bbtFeatureData.features ? bbtFeatureData.features.length : 0, 'features');
 
                 // Only call createBBTNavigationButtons in background loading mode
                 // Buttons are now created statically in HTML
-                console.log('ℹ️ BBT data ready for zoom operations');
+                debug.log('ℹ️ BBT data ready for zoom operations');
 
                 return bbtFeatureData;
             } else {
@@ -174,9 +174,9 @@ const BBTTool = (function() {
 
                 // Handle 503 (service unavailable) as a warning, not an error
                 if (response.status === 503) {
-                    console.warn('⚠️ Vector service unavailable:', response.status, response.statusText);
+                    debug.warn('⚠️ Vector service unavailable:', response.status, response.statusText);
                 } else {
-                    console.error('❌ API Error:', response.status, response.statusText, errorText);
+                    debug.error('❌ API Error:', response.status, response.statusText, errorText);
                 }
 
                 throw new Error(`API Error: ${response.status}`);
@@ -184,7 +184,7 @@ const BBTTool = (function() {
         } catch (error) {
             // Only log as error if it's not a 503 (service unavailable)
             if (!error.message.includes('503')) {
-                console.error('❌ Network Error loading BBT features:', error);
+                debug.error('❌ Network Error loading BBT features:', error);
             }
             throw error;
         }
@@ -214,21 +214,21 @@ const BBTTool = (function() {
      * Called after BBT features are loaded from API
      */
     function createBBTNavigationButtons() {
-        console.log('✅ Upgrading BBT navigation buttons to interactive mode...');
+        debug.log('✅ Upgrading BBT navigation buttons to interactive mode...');
 
         if (!bbtFeatureData || !bbtFeatureData.features) {
-            console.error('No BBT feature data available');
+            debug.error('No BBT feature data available');
             showBBTLoadingError('No feature data available');
             return;
         }
 
         const buttonsContainer = document.getElementById('bbt-nav-buttons');
         if (!buttonsContainer) {
-            console.error('BBT buttons container not found');
+            debug.error('BBT buttons container not found');
             return;
         }
 
-        console.log(`Found ${bbtFeatureData.features.length} BBT features to create buttons for`);
+        debug.log(`Found ${bbtFeatureData.features.length} BBT features to create buttons for`);
 
         // Show loading indicator
         const loadingElement = document.getElementById('bbt-loading');
@@ -238,7 +238,7 @@ const BBTTool = (function() {
 
         // Get all existing buttons (fallback buttons)
         const existingButtons = buttonsContainer.querySelectorAll('.bbt-nav-btn');
-        console.log(`Found ${existingButtons.length} existing buttons to upgrade`);
+        debug.log(`Found ${existingButtons.length} existing buttons to upgrade`);
 
         // Create feature lookup by name for easy matching
         const featuresByName = {};
@@ -264,10 +264,10 @@ const BBTTool = (function() {
                 // Add visual indication that it's now interactive
                 button.style.position = 'relative';
 
-                console.log(`✅ Upgraded button: "${buttonText}"`);
+                debug.log(`✅ Upgraded button: "${buttonText}"`);
                 upgradeCount++;
             } else {
-                console.warn(`⚠️ No matching feature found for button: "${buttonText}"`);
+                debug.warn(`⚠️ No matching feature found for button: "${buttonText}"`);
             }
         });
 
@@ -278,12 +278,12 @@ const BBTTool = (function() {
             }, 500);
         }
 
-        console.log(`✅ Successfully upgraded ${upgradeCount} BBT navigation buttons to interactive mode!`);
+        debug.log(`✅ Successfully upgraded ${upgradeCount} BBT navigation buttons to interactive mode!`);
 
         // Final verification
         setTimeout(() => {
             const allButtons = buttonsContainer.querySelectorAll('.bbt-nav-btn');
-            console.log(`✅ Final verification: ${allButtons.length} interactive buttons ready`);
+            debug.log(`✅ Final verification: ${allButtons.length} interactive buttons ready`);
 
             // Add subtle animation to show they're now interactive
             allButtons.forEach((btn, idx) => {
@@ -345,24 +345,24 @@ const BBTTool = (function() {
 
             // Load EUNIS full layer for this BBT area after zoom completes
             setTimeout(() => {
-                console.log('🗺️ [BBT-TOOL] Loading EUNIS full layer for BBT area:', areaName);
-                console.log('🗺️ [BBT-TOOL] LayerManager available:', !!window.LayerManager);
-                console.log('🗺️ [BBT-TOOL] selectWMSLayerAsOverlay available:', !!(window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay));
+                debug.log('🗺️ [BBT-TOOL] Loading EUNIS full layer for BBT area:', areaName);
+                debug.log('🗺️ [BBT-TOOL] LayerManager available:', !!window.LayerManager);
+                debug.log('🗺️ [BBT-TOOL] selectWMSLayerAsOverlay available:', !!(window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay));
 
                 if (window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay) {
-                    console.log('🗺️ [BBT-TOOL] Calling selectWMSLayerAsOverlay with: eusm_2023_eunis2019_full');
+                    debug.log('🗺️ [BBT-TOOL] Calling selectWMSLayerAsOverlay with: eusm_2023_eunis2019_full');
                     window.LayerManager.selectWMSLayerAsOverlay('eusm_2023_eunis2019_full');
 
                     // Update dropdown to reflect loaded layer
                     const layerSelect = document.getElementById('layer-select');
                     if (layerSelect) {
                         layerSelect.value = 'wms:eusm_2023_eunis2019_full';
-                        console.log('🗺️ [BBT-TOOL] Updated dropdown to show: eusm_2023_eunis2019_full');
+                        debug.log('🗺️ [BBT-TOOL] Updated dropdown to show: eusm_2023_eunis2019_full');
                     } else {
-                        console.warn('⚠️ [BBT-TOOL] layer-select dropdown not found');
+                        debug.warn('⚠️ [BBT-TOOL] layer-select dropdown not found');
                     }
                 } else {
-                    console.error('❌ [BBT-TOOL] LayerManager or selectWMSLayerAsOverlay not available!');
+                    debug.error('❌ [BBT-TOOL] LayerManager or selectWMSLayerAsOverlay not available!');
                 }
             }, 300);
 
@@ -397,14 +397,14 @@ const BBTTool = (function() {
      * @param {string} areaName - Name of the BBT area to zoom to
      */
     function zoomToBBTArea(areaName) {
-        console.log('🎯 Zooming directly to BBT area:', areaName);
+        debug.log('🎯 Zooming directly to BBT area:', areaName);
 
         const map = window.MapInit.getMap();
 
         // Set manual zoom flag to prevent auto-reload
         if (typeof window.isManualZoom !== 'undefined') {
             window.isManualZoom = true;
-            console.log('🔒 Manual zoom mode enabled');
+            debug.log('🔒 Manual zoom mode enabled');
         }
 
         // Update button states immediately
@@ -423,13 +423,13 @@ const BBTTool = (function() {
 
         // Check if we already have BBT data cached
         if (bbtFeatureData && bbtFeatureData.features) {
-            console.log('⚡ Using cached BBT data for instant zoom');
+            debug.log('⚡ Using cached BBT data for instant zoom');
 
             // Find the specific feature
             const feature = bbtFeatureData.features.find(f => f.properties.Name === areaName);
 
             if (feature) {
-                console.log('✅ Found specific BBT feature in cache, zooming instantly...');
+                debug.log('✅ Found specific BBT feature in cache, zooming instantly...');
 
                 // Update status
                 const statusEl = document.getElementById('status');
@@ -444,7 +444,7 @@ const BBTTool = (function() {
                                         window.vectorLayerGroup.getLayers().length > 0;
 
                 if (!isBBTLayerLoaded) {
-                    console.log('🔄 BBT layer not loaded, loading it now...');
+                    debug.log('🔄 BBT layer not loaded, loading it now...');
                     // Clear any existing layers first
                     if (typeof window.vectorLayerGroup !== 'undefined') {
                         window.vectorLayerGroup.clearLayers();
@@ -455,7 +455,7 @@ const BBTTool = (function() {
                         window.loadVectorLayerWithoutAutoZoom('Bbt - Merged', bbtFeatureData);
                     }
                 } else {
-                    console.log('⚡ BBT layer already loaded, skipping re-render!');
+                    debug.log('⚡ BBT layer already loaded, skipping re-render!');
                 }
 
                 // Zoom directly to the specific feature immediately (no delay needed if layer exists)
@@ -464,14 +464,14 @@ const BBTTool = (function() {
                     zoomToBBTFeatureDirect(feature, areaName);
                 }, zoomDelay);
             } else {
-                console.log('⚠️ Specific feature not found in cache');
+                debug.log('⚠️ Specific feature not found in cache');
                 zoomToGeneralBBTArea(areaName);
             }
             return;
         }
 
         // If no cache, fetch the data (first time only)
-        console.log('📡 Loading BBT data for first time...');
+        debug.log('📡 Loading BBT data for first time...');
         const statusEl = document.getElementById('status');
         if (statusEl) {
             statusEl.textContent = `Loading ${areaName}...`;
@@ -481,14 +481,14 @@ const BBTTool = (function() {
         // Load the BBT vector layer data
         fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Merged')}`)
             .then(response => {
-                console.log('📥 BBT layer API response:', response.status);
+                debug.log('📥 BBT layer API response:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 return response.json();
             })
             .then(geojson => {
-                console.log('✅ BBT data loaded, features:', geojson.features ? geojson.features.length : 0);
+                debug.log('✅ BBT data loaded, features:', geojson.features ? geojson.features.length : 0);
 
                 // Store the data for future use
                 bbtFeatureData = geojson;
@@ -497,7 +497,7 @@ const BBTTool = (function() {
                 const feature = geojson.features.find(f => f.properties.Name === areaName);
 
                 if (feature) {
-                    console.log('✅ Found specific BBT feature, zooming directly...');
+                    debug.log('✅ Found specific BBT feature, zooming directly...');
 
                     // Clear any existing layers first
                     if (typeof window.vectorLayerGroup !== 'undefined') {
@@ -514,7 +514,7 @@ const BBTTool = (function() {
                         zoomToBBTFeatureDirect(feature, areaName);
                     }, 100); // Reduced delay for faster UX
                 } else {
-                    console.log('⚠️ Specific feature not found, loading full layer...');
+                    debug.log('⚠️ Specific feature not found, loading full layer...');
                     // Fallback to fast cached loading
                     if (typeof window.loadVectorLayerFast === 'function') {
                         window.loadVectorLayerFast('Bbt - Merged');
@@ -522,7 +522,7 @@ const BBTTool = (function() {
                 }
             })
             .catch(error => {
-                console.error('❌ Failed to load BBT data:', error);
+                debug.error('❌ Failed to load BBT data:', error);
                 const statusEl = document.getElementById('status');
                 if (statusEl) {
                     statusEl.textContent = `Failed to load ${areaName}`;
@@ -530,7 +530,7 @@ const BBTTool = (function() {
                 }
 
                 // Fallback zoom
-                console.log('📍 Using fallback zoom');
+                debug.log('📍 Using fallback zoom');
                 zoomToGeneralBBTArea(areaName);
             });
     }
@@ -543,7 +543,7 @@ const BBTTool = (function() {
      * @param {string} areaName - Name of the BBT area
      */
     function zoomToBBTFeatureDirect(feature, areaName) {
-        console.log('🎯 Zooming directly to BBT feature:', areaName);
+        debug.log('🎯 Zooming directly to BBT feature:', areaName);
 
         const map = window.MapInit.getMap();
 
@@ -578,24 +578,24 @@ const BBTTool = (function() {
 
             // Load EUNIS full layer for this BBT area after zoom completes
             setTimeout(() => {
-                console.log('🗺️ [BBT-TOOL] Loading EUNIS full layer for BBT area:', areaName);
-                console.log('🗺️ [BBT-TOOL] LayerManager available:', !!window.LayerManager);
-                console.log('🗺️ [BBT-TOOL] selectWMSLayerAsOverlay available:', !!(window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay));
+                debug.log('🗺️ [BBT-TOOL] Loading EUNIS full layer for BBT area:', areaName);
+                debug.log('🗺️ [BBT-TOOL] LayerManager available:', !!window.LayerManager);
+                debug.log('🗺️ [BBT-TOOL] selectWMSLayerAsOverlay available:', !!(window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay));
 
                 if (window.LayerManager && window.LayerManager.selectWMSLayerAsOverlay) {
-                    console.log('🗺️ [BBT-TOOL] Calling selectWMSLayerAsOverlay with: eusm_2023_eunis2019_full');
+                    debug.log('🗺️ [BBT-TOOL] Calling selectWMSLayerAsOverlay with: eusm_2023_eunis2019_full');
                     window.LayerManager.selectWMSLayerAsOverlay('eusm_2023_eunis2019_full');
 
                     // Update dropdown to reflect loaded layer
                     const layerSelect = document.getElementById('layer-select');
                     if (layerSelect) {
                         layerSelect.value = 'wms:eusm_2023_eunis2019_full';
-                        console.log('🗺️ [BBT-TOOL] Updated dropdown to show: eusm_2023_eunis2019_full');
+                        debug.log('🗺️ [BBT-TOOL] Updated dropdown to show: eusm_2023_eunis2019_full');
                     } else {
-                        console.warn('⚠️ [BBT-TOOL] layer-select dropdown not found');
+                        debug.warn('⚠️ [BBT-TOOL] layer-select dropdown not found');
                     }
                 } else {
-                    console.error('❌ [BBT-TOOL] LayerManager or selectWMSLayerAsOverlay not available!');
+                    debug.error('❌ [BBT-TOOL] LayerManager or selectWMSLayerAsOverlay not available!');
                 }
             }, 300);
 
@@ -606,24 +606,24 @@ const BBTTool = (function() {
                 statusEl.className = 'status success';
             }
 
-            console.log('✅ Direct zoom completed for:', areaName);
+            debug.log('✅ Direct zoom completed for:', areaName);
 
             // Reset manual zoom flag after zoom animation completes (500ms delay)
             setTimeout(() => {
                 if (typeof window.isManualZoom !== 'undefined') {
                     window.isManualZoom = false;
-                    console.log('🔓 Manual zoom mode disabled');
+                    debug.log('🔓 Manual zoom mode disabled');
                 }
             }, 500);
         } else {
-            console.log('⚠️ Invalid bounds, using fallback zoom');
+            debug.log('⚠️ Invalid bounds, using fallback zoom');
             zoomToGeneralBBTArea(areaName);
 
             // Reset flag even on fallback
             setTimeout(() => {
                 if (typeof window.isManualZoom !== 'undefined') {
                     window.isManualZoom = false;
-                    console.log('🔓 Manual zoom mode disabled (fallback)');
+                    debug.log('🔓 Manual zoom mode disabled (fallback)');
                 }
             }, 500);
         }
@@ -636,7 +636,7 @@ const BBTTool = (function() {
      * @param {string} areaName - Name of the BBT area
      */
     function zoomToGeneralBBTArea(areaName) {
-        console.log('📍 Using general BBT area zoom for:', areaName);
+        debug.log('📍 Using general BBT area zoom for:', areaName);
 
         const map = window.MapInit.getMap();
 
@@ -844,11 +844,11 @@ const BBTTool = (function() {
      * @param {string} bbtName - Name of the BBT area
      */
     function openBBTDataPopup(bbtName) {
-        console.log('📊 Opening BBT data popup for:', bbtName);
+        debug.log('📊 Opening BBT data popup for:', bbtName);
 
         // Get bathymetry stats from global context if available
         const bathymetryStats = window.bathymetryStats || {};
-        console.log('📊 Available bathymetry data:', Object.keys(bathymetryStats));
+        debug.log('📊 Available bathymetry data:', Object.keys(bathymetryStats));
 
         // Initialize if not done
         if (Object.keys(bbtDataStore).length === 0) {
@@ -873,8 +873,8 @@ const BBTTool = (function() {
 
         // Generate bathymetry stats section if available
         const bbtStats = bathymetryStats[bbtName];
-        console.log(`🌊 Bathymetry lookup for "${bbtName}":`, bbtStats);
-        console.log(`🌊 Stats available: ${bbtStats ? 'YES' : 'NO'}`);
+        debug.log(`🌊 Bathymetry lookup for "${bbtName}":`, bbtStats);
+        debug.log(`🌊 Stats available: ${bbtStats ? 'YES' : 'NO'}`);
 
         const bathymetrySection = bbtStats ? `
             <div class="bbt-data-section" style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -967,8 +967,8 @@ const BBTTool = (function() {
             contentEl.innerHTML = content;
         }
 
-        console.log(`🌊 Bathymetry section included: ${bathymetrySection ? 'YES' : 'NO'}`);
-        console.log(`🌊 Content length: ${content.length} characters`);
+        debug.log(`🌊 Bathymetry section included: ${bathymetrySection ? 'YES' : 'NO'}`);
+        debug.log(`🌊 Content length: ${content.length} characters`);
 
         // Store current BBT name for saving
         const overlayEl = document.getElementById('bbt-popup-overlay');
@@ -998,7 +998,7 @@ const BBTTool = (function() {
         const bbtName = overlayEl ? overlayEl.dataset.currentBbt : null;
 
         if (!bbtName) {
-            console.error('No BBT name found for saving');
+            debug.error('No BBT name found for saving');
             return;
         }
 
@@ -1019,7 +1019,7 @@ const BBTTool = (function() {
         // Save to store
         bbtDataStore[bbtName] = updatedData;
 
-        console.log('💾 Saved BBT data for', bbtName, updatedData);
+        debug.log('💾 Saved BBT data for', bbtName, updatedData);
 
         // TODO: Send data to backend API
         // fetch(`${window.AppConfig.API_BASE_URL}/bbt/data/${encodeURIComponent(bbtName)}`, {
@@ -1044,18 +1044,18 @@ const BBTTool = (function() {
      * @async
      */
     async function initializeBBTNavigation() {
-        console.log('🚀 Background loading BBT navigation data...');
+        debug.log('🚀 Background loading BBT navigation data...');
         try {
             await loadBBTFeatures(); // Load data in background for future use
             createBBTNavigationButtons(); // Upgrade buttons after data loads
-            console.log('✅ BBT navigation initialized successfully');
+            debug.log('✅ BBT navigation initialized successfully');
         } catch (error) {
             // Check if it's a 503 error (vector support disabled)
             if (error.message.includes('503')) {
-                console.warn('⚠️ Vector support disabled - BBT navigation unavailable');
+                debug.warn('⚠️ Vector support disabled - BBT navigation unavailable');
                 showBBTLoadingError('BBT features unavailable (vector support disabled)');
             } else {
-                console.error('❌ Failed to initialize BBT navigation:', error);
+                debug.error('❌ Failed to initialize BBT navigation:', error);
                 showBBTLoadingError('Failed to load BBT features');
             }
         }
@@ -1157,7 +1157,7 @@ window.zoomToBBTArea = BBTTool.zoomToBBTArea;
 
 // BBT Zoom Mode Toggle Function
 window.setBBTZoomMode = function(mode) {
-    console.log('🔄 Setting BBT zoom mode to:', mode);
+    debug.log('🔄 Setting BBT zoom mode to:', mode);
     window.bbtZoomMode = mode;
 
     // Update button states
@@ -1179,7 +1179,7 @@ window.setBBTZoomMode = function(mode) {
         descEl.textContent = 'Fit Bounds: Show entire BBT area extent (zoom level varies by size)';
     }
 
-    console.log('✅ BBT zoom mode set to:', mode);
+    debug.log('✅ BBT zoom mode set to:', mode);
 };
 
 // BBT Detail Zoom Level Update Function
@@ -1201,7 +1201,7 @@ window.updateBBTZoomLevel = function(level) {
         }
     }
 
-    console.log(`✅ BBT detail zoom level set to: ${zoomLevel}`);
+    debug.log(`✅ BBT detail zoom level set to: ${zoomLevel}`);
 };
 
 // Initialize zoom mode and level on load

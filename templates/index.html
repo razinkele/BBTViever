@@ -393,16 +393,23 @@
         window.AppConfig.API_BASE_URL = '{{ API_BASE_URL }}';
         window.AppConfig.WMS_BASE_URL = '{{ WMS_BASE_URL }}';
         window.AppConfig.HELCOM_WMS_BASE_URL = '{{ HELCOM_WMS_BASE_URL }}';
+        window.AppConfig.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
 
         // Inject layer data from Flask template
         window.wmsLayers = {{ layers | tojson }};
         window.helcomLayers = {{ helcom_layers | tojson }};
         window.vectorLayers = {{ vector_layers | tojson }};
+    </script>
 
-        console.log('📊 Template data injected:');
-        console.log('  - WMS layers:', window.wmsLayers ? window.wmsLayers.length : 0);
-        console.log('  - HELCOM layers:', window.helcomLayers ? window.helcomLayers.length : 0);
-        console.log('  - Vector layers:', window.vectorLayers ? window.vectorLayers.length : 0);
+    <!-- Debug Utility (must load before other modules) -->
+    <script src="{{ url_for('static', filename='js/utils/debug.js') }}"></script>
+
+    <!-- Log injected template data (using debug utility) -->
+    <script>
+        debug.log('📊 Template data injected:');
+        debug.log('  - WMS layers:', window.wmsLayers ? window.wmsLayers.length : 0);
+        debug.log('  - HELCOM layers:', window.helcomLayers ? window.helcomLayers.length : 0);
+        debug.log('  - Vector layers:', window.vectorLayers ? window.vectorLayers.length : 0);
     </script>
 
     <!-- Application JavaScript Modules (loaded in correct dependency order) -->

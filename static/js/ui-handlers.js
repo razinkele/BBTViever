@@ -14,7 +14,7 @@ window.UIHandlers = (function() {
      */
     function init() {
         if (initialized) {
-            console.warn('UIHandlers already initialized');
+            debug.warn('UIHandlers already initialized');
             return;
         }
 
@@ -26,7 +26,7 @@ window.UIHandlers = (function() {
         setupPopupHandlers();
 
         initialized = true;
-        console.log('✅ UI Handlers initialized');
+        debug.log('✅ UI Handlers initialized');
     }
 
     /**
@@ -120,7 +120,7 @@ window.UIHandlers = (function() {
                 // Switch base map
                 window.MapInit.switchBaseMap(basemapType);
 
-                console.log('🗺️ Switched to base map:', basemapType);
+                debug.log('🗺️ Switched to base map:', basemapType);
             });
         });
     }
@@ -161,7 +161,7 @@ window.UIHandlers = (function() {
      * Change application theme
      */
     function changeTheme(themeName) {
-        console.log('🎨 Changing theme to:', themeName);
+        debug.log('🎨 Changing theme to:', themeName);
         document.body.setAttribute('data-theme', themeName);
 
         // Save theme preference to localStorage
@@ -194,7 +194,7 @@ window.UIHandlers = (function() {
             themeSelect.value = savedTheme;
         }
 
-        console.log('🎨 Theme initialized:', savedTheme);
+        debug.log('🎨 Theme initialized:', savedTheme);
     }
 
     /**
@@ -267,7 +267,7 @@ window.UIHandlers = (function() {
             statusEl.textContent = message;
             statusEl.className = 'status error';
         }
-        console.error(message);
+        debug.error(message);
     }
 
     /**
@@ -296,18 +296,18 @@ window.UIHandlers = (function() {
         const icon = document.getElementById('advanced-toggle-icon');
 
         if (!panel || !icon) {
-            console.error('Advanced panel or icon not found');
+            debug.error('Advanced panel or icon not found');
             return;
         }
 
         if (panel.style.display === 'none' || panel.style.display === '') {
             panel.style.display = 'block';
             icon.textContent = '▼';
-            console.log('Advanced panel opened');
+            debug.log('Advanced panel opened');
         } else {
             panel.style.display = 'none';
             icon.textContent = '▶';
-            console.log('Advanced panel closed');
+            debug.log('Advanced panel closed');
         }
     }
 

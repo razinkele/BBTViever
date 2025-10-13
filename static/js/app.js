@@ -15,11 +15,11 @@
      * Main application initialization
      */
     async function initApp() {
-        console.log('🚀 MARBEFES BBT Database - Initializing application...');
+        debug.log('🚀 MARBEFES BBT Database - Initializing application...');
 
         try {
             // 1. Initialize map
-            console.log('📍 Step 1: Initializing map...');
+            debug.log('📍 Step 1: Initializing map...');
             map = window.MapInit.initMap();
             if (!map) {
                 throw new Error('Failed to initialize map');
@@ -27,27 +27,27 @@
 
             // 2. Create vector layer group
             vectorLayerGroup = L.layerGroup().addTo(map);
-            console.log('📊 Step 2: Vector layer group created');
+            debug.log('📊 Step 2: Vector layer group created');
 
             // 3. Initialize layer manager
-            console.log('🗺️ Step 3: Initializing layer manager...');
+            debug.log('🗺️ Step 3: Initializing layer manager...');
             window.LayerManager.init(map, vectorLayerGroup);
 
             // 4. Initialize UI handlers
-            console.log('🎛️ Step 4: Initializing UI handlers...');
+            debug.log('🎛️ Step 4: Initializing UI handlers...');
             window.UIHandlers.init();
 
             // 5. Initialize BBT tool
-            console.log('🔍 Step 5: Initializing BBT navigation tool...');
+            debug.log('🔍 Step 5: Initializing BBT navigation tool...');
             if (window.BBTTool && typeof window.BBTTool.initialize === 'function') {
                 // BBT tool initializes itself with delay, just ensure it's available
-                console.log('✅ BBT Tool will initialize in background');
+                debug.log('✅ BBT Tool will initialize in background');
             } else {
-                console.warn('⚠️ BBT Tool not available');
+                debug.warn('⚠️ BBT Tool not available');
             }
 
             // 6. Load initial layers
-            console.log('🌊 Step 6: Loading initial layers...');
+            debug.log('🌊 Step 6: Loading initial layers...');
             await loadInitialLayers();
 
             // 7. Setup layer dropdown options
@@ -55,13 +55,13 @@
 
             // Mark initialization as complete
             initializationComplete = true;
-            console.log('✅ Application initialization complete!');
+            debug.log('✅ Application initialization complete!');
 
             // Update status
             window.UIHandlers.showSuccess('Application ready', 2000);
 
         } catch (error) {
-            console.error('❌ Application initialization failed:', error);
+            debug.error('❌ Application initialization failed:', error);
             window.UIHandlers.showError('Initialization failed: ' + error.message);
         }
     }
@@ -71,42 +71,42 @@
      */
     async function loadInitialLayers() {
         try {
-            console.log('🔄 Loading BBT vector layers...');
-            console.log('DEBUG: window.vectorLayers =', window.vectorLayers);
+            debug.log('🔄 Loading BBT vector layers...');
+            debug.log('DEBUG: window.vectorLayers =', window.vectorLayers);
 
             // Get vector layers data from template
             if (window.vectorLayers && window.vectorLayers.length > 0) {
-                console.log('DEBUG: Found', window.vectorLayers.length, 'vector layers');
-                console.log('DEBUG: Available layers:', window.vectorLayers.map(l => l.display_name));
+                debug.log('DEBUG: Found', window.vectorLayers.length, 'vector layers');
+                debug.log('DEBUG: Available layers:', window.vectorLayers.map(l => l.display_name));
 
                 // Load main BBT layer (Bbt - Merged)
                 const mainLayer = window.vectorLayers.find(l => l.display_name === 'Bbt - Merged');
-                console.log('DEBUG: mainLayer =', mainLayer);
+                debug.log('DEBUG: mainLayer =', mainLayer);
 
                 if (mainLayer) {
-                    console.log('DEBUG: Calling loadVectorLayerFast with:', mainLayer.display_name);
+                    debug.log('DEBUG: Calling loadVectorLayerFast with:', mainLayer.display_name);
                     await window.LayerManager.loadVectorLayerFast(mainLayer.display_name);
-                    console.log('✅ Main BBT layer loaded');
+                    debug.log('✅ Main BBT layer loaded');
                 } else {
-                    console.warn('⚠️ Could not find "Bbt - Merged" layer');
+                    debug.warn('⚠️ Could not find "Bbt - Merged" layer');
                 }
 
                 // Preload other layers in background
                 window.LayerManager.preloadLayersInBackground();
             } else {
-                console.warn('⚠️ No vector layers available. window.vectorLayers =', window.vectorLayers);
+                debug.warn('⚠️ No vector layers available. window.vectorLayers =', window.vectorLayers);
             }
 
             // DO NOT load default EUNIS layer at startup
             // Layer will be loaded automatically when user zooms to a BBT
-            console.log('🗺️ EUNIS layer will load when zooming to BBT areas');
+            debug.log('🗺️ EUNIS layer will load when zooming to BBT areas');
 
             // Enable automatic zoom-based layer switching
             window.LayerManager.enableAutoLayerSwitching(true);
 
         } catch (error) {
-            console.error('❌ Error loading initial layers:', error);
-            console.error('Stack trace:', error.stack);
+            debug.error('❌ Error loading initial layers:', error);
+            debug.error('Stack trace:', error.stack);
             // Don't throw - app can still function
         }
     }
@@ -131,7 +131,7 @@
                 layerSelect.appendChild(option);
             });
 
-            console.log(`📋 Populated ${window.wmsLayers.length} WMS layers`);
+            debug.log(`📋 Populated ${window.wmsLayers.length} WMS layers`);
 
             // Update status tooltip
             const emodnetStatusTooltip = document.getElementById('emodnet-status-tooltip');
@@ -154,7 +154,7 @@
                 helcomSelect.appendChild(option);
             });
 
-            console.log(`📋 Populated ${window.helcomLayers.length} HELCOM layers`);
+            debug.log(`📋 Populated ${window.helcomLayers.length} HELCOM layers`);
 
             // Update status tooltip
             const helcomStatusTooltip = document.getElementById('helcom-status-tooltip');
@@ -182,7 +182,7 @@
      * Cleanup and reset application
      */
     function cleanup() {
-        console.log('🧹 Cleaning up application...');
+        debug.log('🧹 Cleaning up application...');
 
         if (window.LayerManager) {
             window.LayerManager.clearLayers('all');
@@ -196,7 +196,7 @@
         vectorLayerGroup = null;
         initializationComplete = false;
 
-        console.log('✅ Cleanup complete');
+        debug.log('✅ Cleanup complete');
     }
 
     // Export public API
@@ -215,5 +215,5 @@
         initApp();
     }
 
-    console.log('📦 Main application module loaded (v2.0.0)');
+    debug.log('📦 Main application module loaded (v2.0.0)');
 })();

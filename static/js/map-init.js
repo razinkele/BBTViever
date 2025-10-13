@@ -43,7 +43,7 @@ window.MapInit = (function() {
             updateWhenIdle: false
         }).addTo(map);
         
-        console.log('✅ Scale bar added to map');
+        debug.log('✅ Scale bar added to map');
 
         return map;
     }
@@ -69,7 +69,7 @@ window.MapInit = (function() {
             autoZIndex: true
         }).addTo(map);
 
-        console.log('✅ Native Leaflet layer control initialized (collapsed by default)');
+        debug.log('✅ Native Leaflet layer control initialized (collapsed by default)');
     }
 
     /**
@@ -87,7 +87,7 @@ window.MapInit = (function() {
      */
     function switchBaseMap(mapKey) {
         if (!baseMaps[mapKey]) {
-            console.error('Base map not found:', mapKey);
+            debug.error('Base map not found:', mapKey);
             return;
         }
 
@@ -128,7 +128,7 @@ window.MapInit = (function() {
     function addOverlayToControl(layer, name) {
         if (layerControl && layer) {
             layerControl.addOverlay(layer, name);
-            console.log(`Added overlay to control: ${name}`);
+            debug.log(`Added overlay to control: ${name}`);
         }
     }
 

@@ -119,7 +119,7 @@
      */
     function init(mapInstance, vectorGroup) {
         if (!mapInstance) {
-            console.error('LayerManager: Map instance is required');
+            debug.error('LayerManager: Map instance is required');
             return;
         }
 
@@ -132,7 +132,7 @@
         // Load factsheet data in background
         loadFactsheets();
 
-        console.log('LayerManager initialized');
+        debug.log('LayerManager initialized');
     }
 
     /**
@@ -151,7 +151,7 @@
             zoomSwitchTimeout = setTimeout(switchEUSeaMapLayerByZoom, 300);
         });
 
-        console.log('Map event handlers initialized');
+        debug.log('Map event handlers initialized');
     }
 
     // ========================================
@@ -169,7 +169,7 @@
         try {
             const response = await fetch(`${window.AppConfig.API_BASE_URL}/factsheets`);
             if (!response.ok) {
-                console.warn('Factsheets not available:', response.status);
+                debug.warn('Factsheets not available:', response.status);
                 return;
             }
 
@@ -185,10 +185,10 @@
                 });
 
                 factsheetsLoaded = true;
-                console.log(`✅ Loaded ${data.bbts.length} factsheets`);
+                debug.log(`✅ Loaded ${data.bbts.length} factsheets`);
             }
         } catch (error) {
-            console.warn('Error loading factsheets:', error);
+            debug.warn('Error loading factsheets:', error);
         }
     }
 
@@ -422,7 +422,7 @@
     function zoomToLayerExtent(layerName) {
         const config = window.AppConfig;
         if (!config) {
-            console.error('AppConfig not available');
+            debug.error('AppConfig not available');
             return;
         }
 
@@ -518,7 +518,7 @@
                 map.setView([54.0, 10.0], 4);
             })
             .catch(error => {
-                console.log('Could not get layer extent:', error);
+                debug.log('Could not get layer extent:', error);
                 // Fallback to European waters
                 map.setView([54.0, 10.0], 4);
             });
@@ -580,7 +580,7 @@
                 displayFeatureInfo(data, latlng);
             })
             .catch(error => {
-                console.log('GetFeatureInfo error:', error);
+                debug.log('GetFeatureInfo error:', error);
                 // Reset status
                 checkLayerVisibility(layerName);
 
@@ -785,7 +785,7 @@
         legendImg.onerror = () => {
             // Silently hide legend if not available (common for some WMS layers)
             legendContainer.style.display = 'none';
-            console.debug(`Legend not available for layer: ${layerName}`);
+            debug.log(`Legend not available for layer: ${layerName}`);
         };
 
         // Set src after handlers are attached
@@ -799,24 +799,24 @@
     function selectWMSLayerAsOverlay(layerName) {
         const config = window.AppConfig;
 
-        console.log(`🔄 [LAYER-MGR] Loading WMS overlay: ${layerName}`);
-        console.log(`   - WMS Base URL: ${config.WMS_BASE_URL}`);
-        console.log(`   - Current map zoom: ${map.getZoom()}`);
-        console.log(`   - Current map center:`, map.getCenter());
-        console.log(`   - Map instance exists:`, !!map);
+        debug.log(`🔄 [LAYER-MGR] Loading WMS overlay: ${layerName}`);
+        debug.log(`   - WMS Base URL: ${config.WMS_BASE_URL}`);
+        debug.log(`   - Current map zoom: ${map.getZoom()}`);
+        debug.log(`   - Current map center:`, map.getCenter());
+        debug.log(`   - Map instance exists:`, !!map);
 
         currentLayer = layerName;
         currentLayerType = 'wms-overlay';
 
         // Show loading indicator
-        console.log('🎬 [LAYER-MGR] Calling showLoadingTimer...');
+        debug.log('🎬 [LAYER-MGR] Calling showLoadingTimer...');
         updateStatus(`Loading ${layerName}...`, 'loading');
         showLoadingTimer(layerName);
-        console.log('✅ [LAYER-MGR] showLoadingTimer called');
+        debug.log('✅ [LAYER-MGR] showLoadingTimer called');
 
         // Clear existing WMS layer from map and layer control
         if (wmsLayer) {
-            console.log('🗑️ Removing existing WMS layer');
+            debug.log('🗑️ Removing existing WMS layer');
             map.removeLayer(wmsLayer);
             if (window.MapInit && window.MapInit.removeOverlayFromControl) {
                 window.MapInit.removeOverlayFromControl(wmsLayer);
@@ -827,7 +827,7 @@
         if (!map.getPane('wmsPane')) {
             const wmsPane = map.createPane('wmsPane');
             wmsPane.style.zIndex = 400; // Above basemap (200) but below overlays (400) and vector (600)
-            console.log('📐 Created wmsPane with z-index 400');
+            debug.log('📐 Created wmsPane with z-index 400');
         }
 
         // Add WMS layer as overlay
@@ -841,9 +841,9 @@
             attribution: 'EMODnet Seabed Habitats'
         });
 
-        console.log('📦 WMS layer will render in wmsPane (z-index: 400)');
+        debug.log('📦 WMS layer will render in wmsPane (z-index: 400)');
 
-        console.log('📦 WMS Layer created with config:', {
+        debug.log('📦 WMS Layer created with config:', {
             layers: layerName,
             format: 'image/png',
             transparent: true,
@@ -861,22 +861,22 @@
         // Set up tile event listeners
         wmsLayer.on('tileloadstart', function() {
             tilesLoading++;
-            console.log('⏳ Tile load started (total requested:', tilesLoading, ')');
+            debug.log('⏳ Tile load started (total requested:', tilesLoading, ')');
         });
 
         wmsLayer.on('tileload', function() {
             tilesLoaded++;
-            console.log('✅ Tile loaded successfully (', tilesLoaded, '/', tilesLoading, ')');
+            debug.log('✅ Tile loaded successfully (', tilesLoaded, '/', tilesLoading, ')');
 
             if (!firstTileLoaded) {
                 firstTileLoaded = true;
-                console.log('🎨 First tile visible!');
+                debug.log('🎨 First tile visible!');
             }
 
             // Hide timer when enough tiles loaded (80% or after 3 seconds)
             if (tilesLoaded >= Math.ceil(tilesLoading * 0.8) && tilesLoading > 0) {
                 setTimeout(() => {
-                    console.log('🎉 Most tiles loaded, hiding timer');
+                    debug.log('🎉 Most tiles loaded, hiding timer');
                     hideLoadingTimer();
                     updateStatus(`Layer loaded: ${layerName}`, '');
                 }, 500);
@@ -886,7 +886,7 @@
         wmsLayer.on('tileerror', function(error) {
             hasErrors = true;
             tilesLoaded++;
-            console.error('❌ Tile error:', error);
+            debug.error('❌ Tile error:', error);
 
             // Don't immediately hide on single error
             if (tilesLoaded >= tilesLoading) {
@@ -897,7 +897,7 @@
 
         // Safety timeout: hide timer after 10 seconds regardless
         const safetyTimeout = setTimeout(() => {
-            console.log('⏰ Safety timeout reached, hiding timer');
+            debug.log('⏰ Safety timeout reached, hiding timer');
             hideLoadingTimer();
             if (tilesLoaded > 0) {
                 updateStatus(`Layer loaded: ${layerName}`, '');
@@ -907,12 +907,12 @@
         }, 10000);
 
         wmsLayer.addTo(map);
-        console.log('✅ WMS layer added to map, hasLayer:', map.hasLayer(wmsLayer));
+        debug.log('✅ WMS layer added to map, hasLayer:', map.hasLayer(wmsLayer));
 
         // Force map to redraw by invalidating size
         setTimeout(() => {
             map.invalidateSize();
-            console.log('🔄 Map invalidated to force redraw');
+            debug.log('🔄 Map invalidated to force redraw');
         }, 100);
 
         // Log a sample tile URL for debugging
@@ -921,8 +921,8 @@
         const sw = bounds.getSouthWest();
         const ne = bounds.getNorthEast();
         const sampleUrl = `${config.WMS_BASE_URL}?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${sw.lng},${sw.lat},${ne.lng},${ne.lat}&width=${size.x}&height=${size.y}&format=image/png&transparent=true&srs=EPSG:4326`;
-        console.log('🔗 Sample WMS tile URL (first 150 chars):', sampleUrl.substring(0, 150) + '...');
-        console.log('📋 Full tile URL for browser testing:', sampleUrl);
+        debug.log('🔗 Sample WMS tile URL (first 150 chars):', sampleUrl.substring(0, 150) + '...');
+        debug.log('📋 Full tile URL for browser testing:', sampleUrl);
 
         // Add to native layer control
         if (window.MapInit && window.MapInit.addOverlayToControl) {
@@ -987,7 +987,7 @@
         }
 
         // Switch to optimal layer
-        console.log(`🔄 Zoom changed to ${currentZoom}, switching EUSeaMap EUNIS 2019 layer...`);
+        debug.log(`🔄 Zoom changed to ${currentZoom}, switching EUSeaMap EUNIS 2019 layer...`);
         const newLayer = optimalLayers[0]; // Try first option
 
         selectWMSLayerAsOverlay(newLayer);
@@ -1007,7 +1007,7 @@
         }
 
         lastAutoSwitchedZoom = currentZoom;
-        console.log(`✅ Switched to ${newLayer} for zoom level ${currentZoom}`);
+        debug.log(`✅ Switched to ${newLayer} for zoom level ${currentZoom}`);
     }
 
     // ========================================
@@ -1085,7 +1085,7 @@
             const currentZoom = map.getZoom();
             const simplifyParam = currentZoom < 12 ? '?simplify=0.007' : '';
 
-            console.log(`Loading vector layer with zoom=${currentZoom}, simplification=${simplifyParam ? '800m' : 'none'}`);
+            debug.log(`Loading vector layer with zoom=${currentZoom}, simplification=${simplifyParam ? '800m' : 'none'}`);
 
             // Fetch GeoJSON for the layer with timeout
             const controller = new AbortController();
@@ -1107,7 +1107,7 @@
             await processVectorLayerData(geojson, layerName);
 
         } catch (error) {
-            console.error('Error loading vector layer:', error);
+            debug.error('Error loading vector layer:', error);
             if (error.name === 'AbortError') {
                 updateStatus('Vector layer loading timed out', 'error');
             } else {
@@ -1121,17 +1121,17 @@
      * @param {string} layerName - Layer name
      */
     async function loadVectorLayerFast(layerName) {
-        console.log('DEBUG LayerManager: loadVectorLayerFast called with layerName =', layerName);
+        debug.log('DEBUG LayerManager: loadVectorLayerFast called with layerName =', layerName);
         try {
             // Determine current simplification state based on zoom
             const currentZoom = map.getZoom();
-            console.log('DEBUG LayerManager: currentZoom =', currentZoom);
+            debug.log('DEBUG LayerManager: currentZoom =', currentZoom);
             const isSimplified = currentZoom < 12;
             const cacheKey = `${layerName}:${isSimplified ? 'simplified' : 'full'}`;
 
             // Check cache first for instant loading (with simplification awareness)
             if (layerCache.has(cacheKey)) {
-                console.log(`✅ Loading ${layerName} from cache (${isSimplified ? '800m simplified' : 'full detail'})`);
+                debug.log(`✅ Loading ${layerName} from cache (${isSimplified ? '800m simplified' : 'full detail'})`);
                 const geojson = layerCache.get(cacheKey);
 
                 // Process immediately from cache
@@ -1140,12 +1140,12 @@
             }
 
             // Fallback to regular loading (which will apply simplification)
-            console.log(`🔄 Loading ${layerName} from server (cache miss, ${isSimplified ? '800m simplified' : 'full detail'})`);
+            debug.log(`🔄 Loading ${layerName} from server (cache miss, ${isSimplified ? '800m simplified' : 'full detail'})`);
             await loadVectorLayer(layerName);
 
         } catch (error) {
-            console.error(`❌ Failed to load layer ${layerName}:`, error);
-            console.error('Stack trace:', error.stack);
+            debug.error(`❌ Failed to load layer ${layerName}:`, error);
+            debug.error('Stack trace:', error.stack);
             updateStatus(`Failed to load ${layerName}`, 'error');
         }
     }
@@ -1156,18 +1156,18 @@
      * @param {string} layerName - Layer name
      */
     async function processVectorLayerData(geojson, layerName) {
-        console.log('DEBUG processVectorLayerData: Called with layerName =', layerName);
-        console.log('DEBUG processVectorLayerData: GeoJSON has', geojson.features?.length || 0, 'features');
+        debug.log('DEBUG processVectorLayerData: Called with layerName =', layerName);
+        debug.log('DEBUG processVectorLayerData: GeoJSON has', geojson.features?.length || 0, 'features');
 
         // Clear existing layers
         vectorLayerGroup.clearLayers();
-        console.log('DEBUG processVectorLayerData: Cleared existing layers');
+        debug.log('DEBUG processVectorLayerData: Cleared existing layers');
 
         // Create a custom pane for vector layers if it doesn't exist
         if (!map.getPane('vectorPane')) {
             const vectorPane = map.createPane('vectorPane');
             vectorPane.style.zIndex = 600; // Above WMS (400)
-            console.log('📐 Created vectorPane with z-index 600');
+            debug.log('📐 Created vectorPane with z-index 600');
         }
 
         // Use VERY subtle styling to let WMS layers show through clearly
@@ -1178,7 +1178,7 @@
             fillOpacity: 0.05,       // VERY transparent (5%) - WMS clearly visible!
             opacity: 0.9             // Visible border
         };
-        console.log('DEBUG processVectorLayerData: Using VERY subtle overlay style (5% fill):', style);
+        debug.log('DEBUG processVectorLayerData: Using VERY subtle overlay style (5% fill):', style);
 
         // Create optimized GeoJSON layer with explicit pane assignment
         const geoJsonLayer = L.geoJSON(geojson, {
@@ -1210,21 +1210,21 @@
                 });
             }
         });
-        console.log('DEBUG processVectorLayerData: Created GeoJSON layer, bounds:', geoJsonLayer.getBounds());
+        debug.log('DEBUG processVectorLayerData: Created GeoJSON layer, bounds:', geoJsonLayer.getBounds());
 
         vectorLayerGroup.addLayer(geoJsonLayer);
-        console.log('DEBUG processVectorLayerData: Added layer to vectorLayerGroup, layer count:', vectorLayerGroup.getLayers().length);
+        debug.log('DEBUG processVectorLayerData: Added layer to vectorLayerGroup, layer count:', vectorLayerGroup.getLayers().length);
 
         if (!map.hasLayer(vectorLayerGroup)) {
             map.addLayer(vectorLayerGroup);
-            console.log('DEBUG processVectorLayerData: Added vectorLayerGroup to map');
+            debug.log('DEBUG processVectorLayerData: Added vectorLayerGroup to map');
 
             // Add vector layer group to layer control (only once)
             if (window.MapInit && window.MapInit.addOverlayToControl) {
                 window.MapInit.addOverlayToControl(vectorLayerGroup, `📍 BBT Areas: ${layerName}`);
             }
         } else {
-            console.log('DEBUG processVectorLayerData: vectorLayerGroup already on map');
+            debug.log('DEBUG processVectorLayerData: vectorLayerGroup already on map');
         }
 
         // Zoom to bounds if available
@@ -1253,7 +1253,7 @@
     async function loadMultipleLayersConcurrently(layerNames, maxConcurrent = 3) {
         const config = window.AppConfig;
 
-        console.log(`Loading ${layerNames.length} layers concurrently (max ${maxConcurrent} parallel)`);
+        debug.log(`Loading ${layerNames.length} layers concurrently (max ${maxConcurrent} parallel)`);
 
         const results = [];
         const errors = [];
@@ -1319,7 +1319,7 @@
         try {
             if (!vectorLayers || vectorLayers.length === 0) return;
 
-            console.log('Preloading vector layers in background...');
+            debug.log('Preloading vector layers in background...');
             const layerNames = vectorLayers.map(layer => layer.display_name);
             const { results, errors } = await loadMultipleLayersConcurrently(layerNames, 2);
 
@@ -1330,13 +1330,13 @@
             });
 
             const simplType = results.length > 0 ? results[0].simplificationType : 'unknown';
-            console.log(`Cached ${results.length} layers (${simplType}) for instant access`);
+            debug.log(`Cached ${results.length} layers (${simplType}) for instant access`);
             if (errors.length > 0) {
-                console.warn(`${errors.length} layers failed to preload`);
+                debug.warn(`${errors.length} layers failed to preload`);
             }
 
         } catch (error) {
-            console.error('Background preloading failed:', error);
+            debug.error('Background preloading failed:', error);
         }
     }
 
@@ -1354,10 +1354,10 @@
      * @param {string} layerName - Name of the layer being loaded
      */
     function showLoadingTimer(layerName) {
-        console.log('⏱️ [TIMER] showLoadingTimer called for:', layerName);
+        debug.log('⏱️ [TIMER] showLoadingTimer called for:', layerName);
 
         hideLoadingTimer(); // Clear any existing timer
-        console.log('⏱️ [TIMER] Cleared any existing timer');
+        debug.log('⏱️ [TIMER] Cleared any existing timer');
 
         loadingStartTime = Date.now();
 
@@ -1372,7 +1372,7 @@
             </div>
         `;
         document.body.appendChild(loadingTimerElement);
-        console.log('⏱️ [TIMER] Timer element created and added to DOM');
+        debug.log('⏱️ [TIMER] Timer element created and added to DOM');
 
         // Update timer every 100ms
         loadingTimerInterval = setInterval(() => {
@@ -1382,7 +1382,7 @@
                 timerDisplay.textContent = elapsed.toFixed(1) + 's';
             }
         }, 100);
-        console.log('⏱️ [TIMER] Timer interval started');
+        debug.log('⏱️ [TIMER] Timer interval started');
     }
 
     /**
@@ -1503,7 +1503,7 @@
         updateStatus: updateStatus,
         enableAutoLayerSwitching: (enabled) => {
             autoSwitchEnabled = enabled;
-            console.log(`Auto layer switching ${enabled ? 'enabled' : 'disabled'}`);
+            debug.log(`Auto layer switching ${enabled ? 'enabled' : 'disabled'}`);
         },
 
         // Getters
