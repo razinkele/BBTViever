@@ -437,7 +437,7 @@ def health_check():
     health_status = {
         "status": "healthy",
         "timestamp": None,  # Will be set below
-        "version": "1.2.0",
+        "version": "1.2.2",
         "components": {}
     }
 
@@ -723,14 +723,23 @@ if __name__ == "__main__":
     logger.info("-" * 60)
 
     port = int(os.environ.get('FLASK_RUN_PORT', 5000))
-    # Default to laguna.ku.lt for deployment - use FLASK_HOST to override
-    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+
+    # Smart default: localhost in development, network-accessible in production
+    # This ensures secure-by-default development while allowing production deployment
+    default_host = '127.0.0.1' if config.DEBUG else '0.0.0.0'
+    host = os.environ.get('FLASK_HOST', default_host)
 
     # Determine public URL for deployment
     public_url = os.environ.get('PUBLIC_URL', 'http://laguna.ku.lt:5000')
 
-    logger.info(f"\nServer accessible at:")
-    logger.info(f"   Local:    http://127.0.0.1:{port}")
-    logger.info(f"   Network:  {public_url}")
+    logger.info(f"\nServer Configuration:")
+    logger.info(f"   Environment: {'Development' if config.DEBUG else 'Production'}")
+    logger.info(f"   Binding to: {host}:{port}")
+    if host == '127.0.0.1':
+        logger.info(f"   Access at: http://127.0.0.1:{port}")
+        logger.info(f"   (Set FLASK_HOST=0.0.0.0 to allow network access)")
+    else:
+        logger.info(f"   Local:    http://127.0.0.1:{port}")
+        logger.info(f"   Network:  {public_url}")
 
     app.run(debug=config.DEBUG, host=host, port=port)

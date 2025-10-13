@@ -66,7 +66,7 @@ This is a Flask-based web application for visualizing EMODnet (European Marine O
 - **Testing**: Verified all 11 BBT areas loading successfully
 
 ### Previous Release (v1.2.0)
-- **Security Enhancement**: Default host binding changed from `0.0.0.0` to `127.0.0.1` for development safety
+- **Security Enhancement**: Smart host binding - `127.0.0.1` in development (secure by default), `0.0.0.0` in production (network-accessible). Override with `FLASK_HOST` environment variable.
 - **Python 3.12+ Compatibility**: Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)`
 - **Performance Optimization**: Added factsheet data caching (86% faster API responses - from ~50ms to ~7ms)
 - **Framework Updates**: Flask-Caching updated to 2.3.1 (latest stable)
