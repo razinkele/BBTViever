@@ -404,6 +404,9 @@
     <!-- Debug Utility (must load before other modules) -->
     <script src="{{ url_for('static', filename='js/utils/debug.js') }}"></script>
 
+    <!-- Shared Data Modules (must load before application modules that use them) -->
+    <script src="{{ url_for('static', filename='js/data/bbt-regions.js') }}"></script>
+
     <!-- Log injected template data (using debug utility) -->
     <script>
         debug.log('📊 Template data injected:');

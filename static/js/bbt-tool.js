@@ -53,74 +53,9 @@ const BBTTool = (function() {
      * @private
      * @type {Object}
      */
-    const bbtRegionInfo = {
-        'Archipelago': {
-            region: 'Baltic Sea',
-            description: 'Marine ecosystem functioning in the Swedish archipelago region',
-            habitat: 'Coastal archipelago with complex habitat mosaic',
-            research_focus: 'Benthic-pelagic coupling in coastal zones'
-        },
-        'Balearic': {
-            region: 'Mediterranean Sea',
-            description: 'Subtropical Mediterranean marine biodiversity hotspot',
-            habitat: 'Mediterranean endemic species and Posidonia meadows',
-            research_focus: 'Climate change impacts on Mediterranean ecosystems'
-        },
-        'Bay of Gdansk': {
-            region: 'Baltic Sea',
-            description: 'Semi-enclosed bay ecosystem with riverine influence',
-            habitat: 'Brackish water transitional zone',
-            research_focus: 'Land-sea connectivity and nutrient cycling'
-        },
-        'Gulf of Biscay': {
-            region: 'Atlantic Ocean',
-            description: 'Continental shelf ecosystem with upwelling dynamics',
-            habitat: 'Deep-water Atlantic marine communities',
-            research_focus: 'Ocean-shelf biodiversity gradients'
-        },
-        'Heraklion': {
-            region: 'Mediterranean Sea',
-            description: 'Eastern Mediterranean oligotrophic ecosystem',
-            habitat: 'Deep Mediterranean basinal communities',
-            research_focus: 'Deep-sea connectivity and endemic biodiversity'
-        },
-        'Hornsund': {
-            region: 'Arctic Ocean',
-            description: 'High Arctic fjord system with glacial influence',
-            habitat: 'Arctic marine communities under climate change',
-            research_focus: 'Arctic ecosystem resilience and tipping points'
-        },
-        'Kongsfjord': {
-            region: 'Arctic Ocean',
-            description: 'Arctic-Atlantic transition zone in Svalbard',
-            habitat: 'Arctic-boreal species transition zone',
-            research_focus: 'Climate-driven Arctic "atlantification"'
-        },
-        'Lithuanian coast': {
-            region: 'Baltic Sea',
-            description: 'Shallow coastal ecosystem with freshwater inputs',
-            habitat: 'Sandy coastal waters with estuarine influence',
-            research_focus: 'Coastal zone management and eutrophication'
-        },
-        'North Sea': {
-            region: 'North Sea',
-            description: 'Productive temperate shelf ecosystem',
-            habitat: 'Continental shelf with diverse benthic communities',
-            research_focus: 'Anthropogenic impacts and ecosystem services'
-        },
-        'Irish Sea': {
-            region: 'Irish Sea',
-            description: 'Semi-enclosed temperate marine ecosystem',
-            habitat: 'Coastal and shelf habitats with tidal dynamics',
-            research_focus: 'Marine spatial planning and biodiversity conservation'
-        },
-        'Sardinia': {
-            region: 'Mediterranean Sea',
-            description: 'Western Mediterranean island ecosystem',
-            habitat: 'Mediterranean shelf communities and canyons',
-            research_focus: 'Island biogeography and connectivity'
-        }
-    };
+    // Use shared BBT region data from external module (loaded in index.html)
+    // Fallback to empty object if not loaded yet
+    const bbtRegionInfo = window.BBTRegionData || {};
 
     /**
      * Template for editable BBT data fields
