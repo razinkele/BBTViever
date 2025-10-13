@@ -395,6 +395,13 @@
         window.AppConfig.HELCOM_WMS_BASE_URL = '{{ HELCOM_WMS_BASE_URL }}';
         window.AppConfig.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
 
+        // Inject map configuration from Flask config (single source of truth)
+        window.AppConfig.defaultView = {
+            lat: {{ config.DEFAULT_MAP_CENTER_LAT }},
+            lng: {{ config.DEFAULT_MAP_CENTER_LNG }},
+            zoom: {{ config.DEFAULT_MAP_ZOOM }}
+        };
+
         // Inject layer data from Flask template
         window.wmsLayers = {{ layers | tojson }};
         window.helcomLayers = {{ helcom_layers | tojson }};

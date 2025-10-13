@@ -3,31 +3,36 @@
  * Centralizes all application configuration and constants
  */
 
-// Application configuration (will be injected by Flask template)
-// Only initialize if not already set by template
+/**
+ * Application configuration module
+ *
+ * Core configuration (API URLs, map defaults) is injected by Flask template
+ * from Python config (single source of truth in .env file).
+ *
+ * This module only adds client-side-only configuration that doesn't need
+ * to be synchronized with the backend.
+ */
+
+// Ensure AppConfig exists (should be set by template, but provide fallback)
 if (typeof window.AppConfig === 'undefined') {
+    console.warn('AppConfig not injected by template, using fallback defaults');
     window.AppConfig = {
-        API_BASE_URL: '', // Set by template
-        WMS_BASE_URL: '', // Set by template
-        HELCOM_WMS_BASE_URL: '' // Set by template
+        API_BASE_URL: '/api',
+        WMS_BASE_URL: 'https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms',
+        HELCOM_WMS_BASE_URL: 'https://maps.helcom.fi/arcgis/services/MADS/Pressures/MapServer/WMSServer',
+        DEBUG: false,
+        defaultView: { lat: 54.0, lng: 10.0, zoom: 4 }
     };
 }
 
-// Add default configuration properties
+// Add client-side-only configuration (not needed in Python)
 Object.assign(window.AppConfig, {
-    // Default map settings
-    defaultView: {
-        lat: 54.0,
-        lng: 10.0,
-        zoom: 4
-    },
-
-    // Default layer settings
+    // Default layer settings (client-side UI preferences)
     defaultLayer: 'eusm_2023_eunis2019_full',
     defaultOpacity: 0.7,
 
-    // Map configuration
-    zoomControl: false
+    // Map UI configuration (client-side only)
+    zoomControl: false  // Leaflet zoom control (we use custom controls)
 });
 
 // Base map definitions
