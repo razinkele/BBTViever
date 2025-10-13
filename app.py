@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "config"))
 # Local imports
 from config import get_config, EMODNET_LAYERS
 from emodnet_viewer.utils.logging_config import setup_logging, get_logger
+from emodnet_viewer.__version__ import __version__, __version_date__, get_version_dict
 
 # Initialize vector support - check for geopandas availability first
 VECTOR_SUPPORT = False
@@ -437,7 +438,8 @@ def health_check():
     health_status = {
         "status": "healthy",
         "timestamp": None,  # Will be set below
-        "version": "1.2.2",
+        "version": __version__,
+        "version_date": __version_date__,
         "components": {}
     }
 

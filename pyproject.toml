@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emodnet-viewer"
-version = "1.2.2"
+dynamic = ["version"]
 description = "Flask-based web application for visualizing EMODnet Seabed Habitats WMS layers with vector support"
 readme = "CLAUDE.md"
 authors = [
@@ -194,6 +194,9 @@ filterwarnings = [
 where = ["src"]
 include = ["emodnet_viewer*"]
 exclude = ["tests*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "emodnet_viewer.__version__.__version__"}
 
 [tool.setuptools.package-data]
 emodnet_viewer = ["templates/*", "static/*"]
