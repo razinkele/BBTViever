@@ -32,6 +32,8 @@
     let isManualZoom = false;
 
     // Layer cache for instant access (simplification-aware)
+    // Maximum cache size to prevent memory leaks (LRU eviction)
+    const MAX_LAYER_CACHE_SIZE = 50;
     const layerCache = new Map();
 
     // Factsheet data cache
@@ -42,6 +44,24 @@
     // Use shared BBT region data from external module (loaded in index.html)
     // Fallback to empty object if not loaded yet
     const bbtRegionInfo = window.BBTRegionData || {};
+
+    /**
+     * Add item to cache with LRU eviction strategy
+     * @param {string} key - Cache key
+     * @param {any} value - Value to cache
+     */
+    function addToLayerCache(key, value) {
+        // Evict oldest entry if cache is full
+        if (layerCache.size >= MAX_LAYER_CACHE_SIZE) {
+            const oldestKey = layerCache.keys().next().value;
+            layerCache.delete(oldestKey);
+            debug.log(`🗑️ Cache eviction: removed oldest entry '${oldestKey}' (cache size: ${layerCache.size}/${MAX_LAYER_CACHE_SIZE})`);
+        }
+
+        // Add new entry (Maps maintain insertion order)
+        layerCache.set(key, value);
+        debug.log(`💾 Cached layer '${key}' (cache size: ${layerCache.size}/${MAX_LAYER_CACHE_SIZE})`);
+    }
 
     // ========================================
     // INITIALIZATION
@@ -1260,8 +1280,9 @@
 
             // Cache successful results with simplification-aware keys
             results.forEach(({ layerName, data, simplificationType }) => {
+                // Standardized cache key format: layerName:simplified|full
                 const cacheKey = `${layerName}:${simplificationType}`;
-                layerCache.set(cacheKey, data);
+                addToLayerCache(cacheKey, data);
             });
 
             const simplType = results.length > 0 ? results[0].simplificationType : 'unknown';

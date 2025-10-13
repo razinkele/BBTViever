@@ -92,7 +92,7 @@
                 }
 
                 // Preload other layers in background
-                window.LayerManager.preloadLayersInBackground();
+                window.LayerManager.preloadLayersInBackground(window.vectorLayers);
             } else {
                 debug.warn('⚠️ No vector layers available. window.vectorLayers =', window.vectorLayers);
             }
