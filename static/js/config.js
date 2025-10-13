@@ -35,41 +35,42 @@ Object.assign(window.AppConfig, {
     zoomControl: false  // Leaflet zoom control (we use custom controls)
 });
 
-// Base map definitions
-window.BaseMaps = {
-    'emodnet_bathymetry': {
-        url: 'https://tiles.emodnet-bathymetry.eu/latest/mean_atlas_land/web_mercator/{z}/{x}/{y}.png',
-        options: {
-            attribution: '© EMODnet Bathymetry | Marine data from European seas',
-            minZoom: 0,
-            maxZoom: 18
-        }
-    },
-    'osm': {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        options: {
-            attribution: '© OpenStreetMap contributors'
-        }
-    },
-    'satellite': {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        options: {
-            attribution: '© Esri'
-        }
-    },
-    'ocean': {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
-        options: {
-            attribution: '© Esri'
-        }
-    },
-    'light': {
-        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-        options: {
-            attribution: '© CartoDB'
-        }
-    }
-};
+// Base map definitions - injected from Python config (single source of truth)
+// Transform Python format to Leaflet-compatible format
+window.BaseMaps = {};
 
-// Default base map
-window.AppConfig.defaultBaseMap = 'satellite';
+if (window.AppConfig.basemapConfigs) {
+    // Convert Python basemap config to Leaflet format
+    for (const [key, config] of Object.entries(window.AppConfig.basemapConfigs)) {
+        window.BaseMaps[key] = {
+            url: config.url,
+            options: {
+                attribution: config.attribution,
+                ...(config.minZoom !== undefined && { minZoom: config.minZoom }),
+                ...(config.maxZoom !== undefined && { maxZoom: config.maxZoom })
+            }
+        };
+    }
+    debug.log(`✅ Loaded ${Object.keys(window.BaseMaps).length} basemaps from Python config`);
+} else {
+    // Fallback basemaps if injection failed (should never happen in production)
+    debug.warn('⚠️ Basemap config not injected, using fallback definitions');
+    window.BaseMaps = {
+        'emodnet_bathymetry': {
+            url: 'https://tiles.emodnet-bathymetry.eu/latest/mean_atlas_land/web_mercator/{z}/{x}/{y}.png',
+            options: {
+                attribution: '© EMODnet Bathymetry | Marine data from European seas',
+                minZoom: 0,
+                maxZoom: 18
+            }
+        },
+        'satellite': {
+            url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            options: {
+                attribution: '© Esri'
+            }
+        }
+    };
+    // Fallback default
+    window.AppConfig.defaultBaseMap = 'satellite';
+}

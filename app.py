@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "config"))
 
 # Local imports
-from config import get_config, EMODNET_LAYERS
+from config import get_config, EMODNET_LAYERS, BASEMAP_CONFIGS, DEFAULT_BASEMAP
 from emodnet_viewer.utils.logging_config import setup_logging, get_logger
 from emodnet_viewer.__version__ import __version__, __version_date__, get_version_dict
 
@@ -423,6 +423,8 @@ def index():
         HELCOM_WMS_BASE_URL=HELCOM_WMS_BASE_URL,
         APPLICATION_ROOT=app_root,
         API_BASE_URL=api_base_url,
+        BASEMAP_CONFIGS=BASEMAP_CONFIGS,
+        DEFAULT_BASEMAP=DEFAULT_BASEMAP,
     )
 
 

@@ -70,7 +70,7 @@
             habitat: 'Arctic-boreal species transition zone',
             research_focus: 'Climate-driven Arctic "atlantification"'
         },
-        'Lithuanian coast': {
+        'Lithuanian coastal zone': {
             region: 'Baltic Sea',
             description: 'Shallow coastal ecosystem with freshwater inputs',
             habitat: 'Sandy coastal waters with estuarine influence',

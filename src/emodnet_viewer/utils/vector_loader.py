@@ -80,18 +80,72 @@ class VectorLayerLoader:
         }
 
     def discover_gpkg_files(self) -> List[Path]:
-        """Discover all GPKG files in the vector directory"""
+        """Discover all GPKG and GeoJSON files in the vector directory"""
         if not self.vector_dir.exists():
             self.logger.warning(f"Vector directory does not exist: {self.vector_dir}")
             return []
 
+        # Support both GPKG and GeoJSON files
         gpkg_files = list(self.vector_dir.glob("*.gpkg"))
-        self.logger.info(f"Discovered {len(gpkg_files)} GPKG files")
+        geojson_files = list(self.vector_dir.glob("*.geojson"))
 
-        for gpkg_file in gpkg_files:
-            self.logger.debug(f"Found GPKG file: {gpkg_file}")
+        all_files = gpkg_files + geojson_files
 
-        return gpkg_files
+        self.logger.info(f"Discovered {len(gpkg_files)} GPKG files and {len(geojson_files)} GeoJSON files")
+
+        for vector_file in all_files:
+            self.logger.debug(f"Found vector file: {vector_file}")
+
+        return all_files
+
+    def get_layer_info_from_geojson(self, geojson_path: Path) -> List[Dict[str, Any]]:
+        """Get layer information from a GeoJSON file using pure JSON parsing"""
+        try:
+            with open(geojson_path, 'r') as f:
+                geojson_data = json.load(f)
+
+            # Extract basic information from GeoJSON
+            features = geojson_data.get('features', [])
+
+            # Get bounding box from features
+            coords = []
+            for feature in features:
+                geom = feature.get('geometry', {})
+                geom_coords = geom.get('coordinates', [])
+                if geom.get('type') == 'MultiPolygon':
+                    # Flatten MultiPolygon coordinates
+                    for polygon in geom_coords:
+                        for ring in polygon:
+                            coords.extend(ring)
+                elif geom.get('type') == 'Polygon':
+                    for ring in geom_coords:
+                        coords.extend(ring)
+
+            # Calculate bounds
+            if coords:
+                lons = [coord[0] for coord in coords]
+                lats = [coord[1] for coord in coords]
+                bounds = (min(lons), min(lats), max(lons), max(lats))
+            else:
+                bounds = (-180, -90, 180, 90)
+
+            # Get CRS from GeoJSON (defaults to EPSG:4326)
+            crs = geojson_data.get('crs', {}).get('properties', {}).get('name', 'EPSG:4326')
+
+            info = {
+                "layer_name": geojson_path.stem,  # Use filename as layer name
+                "geometry_type": features[0].get('geometry', {}).get('type', 'Unknown') if features else 'Unknown',
+                "feature_count": len(features),
+                "bounds": bounds,
+                "crs": crs,
+                "schema": {"properties": features[0].get('properties', {}) if features else {}, "geometry": "Unknown"}
+            }
+
+            return [info]  # GeoJSON files have a single layer
+
+        except Exception as e:
+            self.logger.error(f"Error reading GeoJSON file {geojson_path}: {e}")
+            return []
 
     def get_layer_info_from_gpkg(self, gpkg_path: Path) -> List[Dict[str, Any]]:
         """Get layer information from a GPKG file"""
@@ -127,6 +181,55 @@ class VectorLayerLoader:
         except Exception as e:
             self.logger.error(f"Error reading GPKG file {gpkg_path}: {e}")
             return []
+
+    def load_geojson_layer(self, geojson_path: Path, layer_name: str, layer_info: Dict[str, Any]) -> Optional[VectorLayer]:
+        """Load a GeoJSON layer using pure JSON parsing (no GDAL required)"""
+        try:
+            # Load GeoJSON data
+            with open(geojson_path, 'r') as f:
+                geojson_data = json.load(f)
+
+            features = geojson_data.get('features', [])
+
+            if not features:
+                self.logger.warning(f"GeoJSON file {geojson_path} contains no features")
+                return None
+
+            # Get geometry type
+            geom_type = layer_info.get('geometry_type', 'MultiPolygon')
+
+            # Get bounds
+            bounds = layer_info.get('bounds', (-180, -90, 180, 90))
+
+            # Create display name
+            display_name = self._create_display_name(geojson_path.stem, layer_name)
+
+            # Get appropriate style
+            style = self.default_styles.get(geom_type, self.default_styles["Polygon"])
+
+            # Create vector layer object
+            vector_layer = VectorLayer(
+                file_path=str(geojson_path),
+                layer_name=layer_name,
+                display_name=display_name,
+                geometry_type=geom_type,
+                feature_count=len(features),
+                bounds=bounds,
+                crs="EPSG:4326",  # GeoJSON is always WGS84
+                source_file=geojson_path.name,
+                style=style,
+            )
+
+            # Cache the raw GeoJSON data for later use (skip GDAL entirely)
+            cache_key = f"{geojson_path}:{layer_name}"
+            self._geojson_cache[cache_key] = geojson_data
+
+            self.logger.info(f"Loaded GeoJSON layer: {display_name} ({len(features)} features) - No GDAL required!")
+            return vector_layer
+
+        except Exception as e:
+            self.logger.error(f"Error loading GeoJSON layer from {geojson_path}: {e}")
+            return None
 
     def load_vector_layer(self, gpkg_path: Path, layer_name: str) -> Optional[VectorLayer]:
         """Load a specific layer from a GPKG file"""
@@ -273,26 +376,36 @@ class VectorLayerLoader:
             return f"{file_display} - {layer_display}"
 
     def load_all_vector_layers(self) -> List[VectorLayer]:
-        """Load all vector layers from all GPKG files"""
+        """Load all vector layers from all GPKG and GeoJSON files"""
         # Always clear existing layers to ensure fresh loading
         self.loaded_layers.clear()
-        gpkg_files = self.discover_gpkg_files()
+        vector_files = self.discover_gpkg_files()
 
-        if not gpkg_files:
-            self.logger.info("No GPKG files found")
+        if not vector_files:
+            self.logger.info("No vector files found")
             return self.loaded_layers
 
-        for gpkg_path in gpkg_files:
-            self.logger.info(f"Processing GPKG file: {gpkg_path}")
+        for vector_path in vector_files:
+            file_ext = vector_path.suffix.lower()
+            self.logger.info(f"Processing {file_ext} file: {vector_path}")
 
-            # Get layer information
-            layers_info = self.get_layer_info_from_gpkg(gpkg_path)
+            # Route to appropriate handler based on file extension
+            if file_ext == '.geojson':
+                # Get layer information from GeoJSON
+                layers_info = self.get_layer_info_from_geojson(vector_path)
+            else:  # .gpkg
+                # Get layer information from GPKG
+                layers_info = self.get_layer_info_from_gpkg(vector_path)
 
             for layer_info in layers_info:
                 layer_name = layer_info["layer_name"]
 
                 # Load the layer
-                vector_layer = self.load_vector_layer(gpkg_path, layer_name)
+                if file_ext == '.geojson':
+                    vector_layer = self.load_geojson_layer(vector_path, layer_name, layer_info)
+                else:
+                    vector_layer = self.load_vector_layer(vector_path, layer_name)
+
                 if vector_layer:
                     self.loaded_layers.append(vector_layer)
 
@@ -327,6 +440,48 @@ class VectorLayerLoader:
             cache_key = f"{layer.file_path}:{layer.layer_name}"
             geojson_cache_key = f"{cache_key}:simplify={simplify_tolerance or 0}"
 
+            # FAST PATH: For GeoJSON files, return cached data immediately (no GDAL!)
+            if layer.file_path.endswith('.geojson'):
+                # Check if we have cached GeoJSON from load_geojson_layer()
+                if cache_key in self._geojson_cache:
+                    self.logger.debug(f"GeoJSON fast-path for {layer.display_name} (no GDAL)")
+                    geojson = self._geojson_cache[cache_key]
+
+                    # Add layer metadata
+                    geojson["metadata"] = {
+                        "layer_name": layer.layer_name,
+                        "display_name": layer.display_name,
+                        "geometry_type": layer.geometry_type,
+                        "feature_count": layer.feature_count,
+                        "bounds": layer.bounds,
+                        "source_file": layer.source_file,
+                        "style": layer.style,
+                    }
+
+                    return geojson
+                else:
+                    # If not cached, load directly from file (pure JSON, no GDAL)
+                    self.logger.debug(f"Loading GeoJSON from disk: {layer.display_name}")
+                    with open(layer.file_path, 'r') as f:
+                        geojson = json.load(f)
+
+                    # Cache for next time
+                    self._geojson_cache[cache_key] = geojson
+
+                    # Add layer metadata
+                    geojson["metadata"] = {
+                        "layer_name": layer.layer_name,
+                        "display_name": layer.display_name,
+                        "geometry_type": layer.geometry_type,
+                        "feature_count": layer.feature_count,
+                        "bounds": layer.bounds,
+                        "source_file": layer.source_file,
+                        "style": layer.style,
+                    }
+
+                    return geojson
+
+            # GPKG PATH: Use geopandas (requires GDAL)
             # TIER 1: Check GeoJSON cache (fastest - serialized JSON ready to return)
             if geojson_cache_key in self._geojson_cache:
                 self.logger.debug(f"GeoJSON cache hit for {layer.display_name}")

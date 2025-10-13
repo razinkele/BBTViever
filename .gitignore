@@ -23,6 +23,7 @@ MANIFEST
 
 # Virtual Environment
 venv/
+venv_broken/
 env/
 ENV/
 env.bak/
@@ -59,6 +60,8 @@ instance/
 
 # Data files (can be large)
 data/vector/*.gpkg
+data/vector/*.gpkg.broken
+data/vector/*.geojson
 data/cache/
 
 # Temporary files
@@ -75,3 +78,16 @@ www/
 
 # Nginx/System files
 *.pid
+
+# Session/temporary documentation (keep only final reports)
+*_v1.2.*.md
+BASEMAP_TEST_RESULTS.md
+CONSISTENCY_OPTIMIZATION_REPORT.md
+GEOJSON_SOLUTION.md
+LAYER_NAME_FIX_v2.md
+ONLINE_TEST_v1.2.2.md
+SUCCESS_REPORT.md
+VECTOR_LAYER_ISSUE.md
+
+# Test files
+static/test_*.html

@@ -176,7 +176,15 @@ EMODNET_LAYERS = [
 ]
 
 # Base map configurations
+# These are injected into JavaScript templates to maintain single source of truth
 BASEMAP_CONFIGS = {
+    'emodnet_bathymetry': {
+        'name': 'EMODnet Bathymetry',
+        'url': 'https://tiles.emodnet-bathymetry.eu/latest/mean_atlas_land/web_mercator/{z}/{x}/{y}.png',
+        'attribution': '© EMODnet Bathymetry | Marine data from European seas',
+        'minZoom': 0,
+        'maxZoom': 18
+    },
     'osm': {
         'name': 'OpenStreetMap',
         'url': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -198,3 +206,6 @@ BASEMAP_CONFIGS = {
         'attribution': '© CartoDB'
     }
 }
+
+# Default basemap selection
+DEFAULT_BASEMAP = 'satellite'

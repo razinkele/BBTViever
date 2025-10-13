@@ -89,7 +89,7 @@ const BBTTool = (function() {
         debug.log('🔄 Loading BBT features from API...');
 
         try {
-            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Merged')}`;
+            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt')}`;
             debug.log('📡 Fetching from URL:', apiUrl);
 
             const response = await fetch(apiUrl);
@@ -319,7 +319,7 @@ const BBTTool = (function() {
             // Auto-load vector layer if not already loaded (requires global context)
             if (typeof window.selectVectorLayerAsBase === 'function') {
                 if (window.currentLayerType !== 'vector' || !window.vectorLayerGroup?.getLayers().length) {
-                    window.selectVectorLayerAsBase('Bbt - Merged');
+                    window.selectVectorLayerAsBase('Bbt');
                 }
             }
         }
@@ -352,7 +352,7 @@ const BBTTool = (function() {
 
         // Set layer selection state (requires global context)
         if (typeof window.currentLayer !== 'undefined') {
-            window.currentLayer = 'Bbt - Merged';
+            window.currentLayer = 'Bbt';
             window.currentLayerType = 'vector';
         }
 
@@ -374,7 +374,7 @@ const BBTTool = (function() {
                 }
 
                 // Check if BBT layer is already loaded (optimization: skip re-rendering if already visible)
-                const isBBTLayerLoaded = window.currentLayer === 'Bbt - Merged' &&
+                const isBBTLayerLoaded = window.currentLayer === 'Bbt' &&
                                         window.vectorLayerGroup &&
                                         window.vectorLayerGroup.getLayers().length > 0;
 
@@ -387,7 +387,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Bbt - Merged', bbtFeatureData);
+                        window.loadVectorLayerWithoutAutoZoom('Bbt', bbtFeatureData);
                     }
                 } else {
                     debug.log('⚡ BBT layer already loaded, skipping re-render!');
@@ -414,7 +414,7 @@ const BBTTool = (function() {
         }
 
         // Load the BBT vector layer data
-        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt - Merged')}`)
+        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt')}`)
             .then(response => {
                 debug.log('📥 BBT layer API response:', response.status);
                 if (!response.ok) {
@@ -441,7 +441,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Bbt - Merged', geojson);
+                        window.loadVectorLayerWithoutAutoZoom('Bbt', geojson);
                     }
 
                     // Then zoom directly to the specific feature with optimized timing
@@ -452,7 +452,7 @@ const BBTTool = (function() {
                     debug.log('⚠️ Specific feature not found, loading full layer...');
                     // Fallback to fast cached loading
                     if (typeof window.loadVectorLayerFast === 'function') {
-                        window.loadVectorLayerFast('Bbt - Merged');
+                        window.loadVectorLayerFast('Bbt');
                     }
                 }
             })
@@ -774,143 +774,139 @@ const BBTTool = (function() {
 
     /**
      * Opens the BBT data popup for a specific BBT area
-     * Displays editable fields and bathymetry statistics if available
+     * Displays MARBEFES dataset information with links to VLIZ repository
      *
      * @param {string} bbtName - Name of the BBT area
      */
     function openBBTDataPopup(bbtName) {
         debug.log('📊 Opening BBT data popup for:', bbtName);
 
-        // Get bathymetry stats from global context if available
-        const bathymetryStats = window.bathymetryStats || {};
-        debug.log('📊 Available bathymetry data:', Object.keys(bathymetryStats));
-
-        // Initialize if not done
-        if (Object.keys(bbtDataStore).length === 0) {
-            initializeBBTData();
-        }
-
-        // Get or create data for this BBT
-        if (!bbtDataStore[bbtName]) {
-            bbtDataStore[bbtName] = {
-                ...bbtDataTemplate,
-                location: bbtName
-            };
-        }
-
-        const data = bbtDataStore[bbtName];
-
         // Update popup title
         const titleEl = document.getElementById('bbt-popup-title');
         if (titleEl) {
-            titleEl.textContent = `${bbtName} - BBT Data`;
+            titleEl.textContent = `${bbtName} - MARBEFES Datasets`;
         }
 
-        // Generate bathymetry stats section if available
-        const bbtStats = bathymetryStats[bbtName];
-        debug.log(`🌊 Bathymetry lookup for "${bbtName}":`, bbtStats);
-        debug.log(`🌊 Stats available: ${bbtStats ? 'YES' : 'NO'}`);
+        // Get MARBEFES datasets for this BBT region
+        const datasets = window.getMARBEFESDatasets ? window.getMARBEFESDatasets(bbtName) : null;
 
-        const bathymetrySection = bbtStats ? `
-            <div class="bbt-data-section" style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <h3 style="margin-top: 0; color: #1976d2; font-size: 16px; margin-bottom: 10px;">
-                    🌊 Bathymetry Statistics
-                </h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                    <div>
-                        <strong>Min Depth:</strong> ${bbtStats.min_depth_m} m
-                    </div>
-                    <div>
-                        <strong>Max Depth:</strong> ${bbtStats.max_depth_m} m
-                    </div>
-                    <div>
-                        <strong>Avg Depth:</strong> ${bbtStats.avg_depth_m} m
-                    </div>
-                    <div>
-                        <strong>Depth Range:</strong> ${(bbtStats.max_depth_m - bbtStats.min_depth_m).toFixed(1)} m
+        let content = '';
+
+        if (!datasets || datasets.length === 0) {
+            // No datasets available for this BBT
+            content = `
+                <div style="text-align: center; padding: 40px 20px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+                    <h3 style="color: #999; margin-bottom: 10px;">No MARBEFES data produced</h3>
+                    <p style="font-size: 14px; line-height: 1.6;">
+                        No datasets have been published for this BBT region yet.
+                        <br>Check back later for updates as the MARBEFES project progresses.
+                    </p>
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; font-size: 13px;">
+                        <strong>MARBEFES Project:</strong> Marine Biodiversity and Ecosystem Functioning across European Seas
+                        <br><a href="https://www.vliz.be/en/imis?module=project&proid=5393" target="_blank" style="color: #20B2AA; text-decoration: none;">
+                            View project details at VLIZ →
+                        </a>
                     </div>
                 </div>
-                ${bbtStats.notes ? `<div style="font-style: italic; color: #555; margin-bottom: 8px;">${bbtStats.notes}</div>` : ''}
-                <div style="font-size: 12px; color: #666;">
-                    Source: ${bbtStats.sample_count ? 'EMODnet Bathymetry (sampled)' : 'Manual bathymetric data'}
-                </div>
-            </div>
-        ` : '';
+            `;
+        } else {
+            // Display datasets
+            const datasetCount = datasets.length;
+            const categoryCount = new Set(datasets.map(d => d.category)).size;
 
-        // Generate form fields
-        const content = `
-            <div class="bbt-data-field">
-                <label for="bbt-location">Location</label>
-                <input type="text" id="bbt-location" value="${data.location}" readonly>
-            </div>
-            ${bathymetrySection}
-            <div class="bbt-data-field">
-                <label for="bbt-coordinates">Coordinates (Lat, Lon)</label>
-                <input type="text" id="bbt-coordinates" value="${data.coordinates}" placeholder="e.g., 60.5, 25.2">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-depth">Depth Range (m)</label>
-                <input type="text" id="bbt-depth" value="${data.depth_range}" placeholder="e.g., 10-50m">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-habitat">Habitat Type</label>
-                <select id="bbt-habitat">
-                    <option value="">Select habitat type</option>
-                    <option value="Rocky reef" ${data.habitat_type === 'Rocky reef' ? 'selected' : ''}>Rocky reef</option>
-                    <option value="Sandy bottom" ${data.habitat_type === 'Sandy bottom' ? 'selected' : ''}>Sandy bottom</option>
-                    <option value="Muddy bottom" ${data.habitat_type === 'Muddy bottom' ? 'selected' : ''}>Muddy bottom</option>
-                    <option value="Mixed sediment" ${data.habitat_type === 'Mixed sediment' ? 'selected' : ''}>Mixed sediment</option>
-                    <option value="Seagrass meadow" ${data.habitat_type === 'Seagrass meadow' ? 'selected' : ''}>Seagrass meadow</option>
-                    <option value="Kelp forest" ${data.habitat_type === 'Kelp forest' ? 'selected' : ''}>Kelp forest</option>
-                </select>
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-sampling-date">Last Sampling Date</label>
-                <input type="date" id="bbt-sampling-date" value="${data.sampling_date}">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-research-team">Research Team</label>
-                <input type="text" id="bbt-research-team" value="${data.research_team}" placeholder="e.g., Institute Name">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-species-count">Species Count</label>
-                <input type="number" id="bbt-species-count" value="${data.species_count}" placeholder="Number of species">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-biodiversity">Biodiversity Index</label>
-                <input type="text" id="bbt-biodiversity" value="${data.biodiversity_index}" placeholder="e.g., Shannon index">
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-env-status">Environmental Status</label>
-                <select id="bbt-env-status">
-                    <option value="">Select status</option>
-                    <option value="Excellent" ${data.environmental_status === 'Excellent' ? 'selected' : ''}>Excellent</option>
-                    <option value="Good" ${data.environmental_status === 'Good' ? 'selected' : ''}>Good</option>
-                    <option value="Moderate" ${data.environmental_status === 'Moderate' ? 'selected' : ''}>Moderate</option>
-                    <option value="Poor" ${data.environmental_status === 'Poor' ? 'selected' : ''}>Poor</option>
-                    <option value="Bad" ${data.environmental_status === 'Bad' ? 'selected' : ''}>Bad</option>
-                </select>
-            </div>
-            <div class="bbt-data-field">
-                <label for="bbt-notes">Additional Notes</label>
-                <textarea id="bbt-notes" placeholder="Enter any additional observations or notes...">${data.notes}</textarea>
-            </div>
-        `;
+            content = `
+                <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;">
+                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                        📚 ${datasetCount} Dataset${datasetCount > 1 ? 's' : ''} Available
+                    </div>
+                    <div style="font-size: 12px; opacity: 0.9;">
+                        Covering ${categoryCount} categor${categoryCount > 1 ? 'ies' : 'y'} from the MARBEFES project
+                    </div>
+                </div>
+
+                <div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
+            `;
+
+            // Group datasets by category
+            const categories = ['Biological', 'Environmental', 'Socio-Economic'];
+
+            categories.forEach(category => {
+                const categoryDatasets = datasets.filter(d => d.category === category);
+
+                if (categoryDatasets.length > 0) {
+                    const icon = window.getDatasetCategoryIcon ? window.getDatasetCategoryIcon(category) : '📊';
+
+                    content += `
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #20B2AA; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                <span>${icon}</span>
+                                <span>${category} Data (${categoryDatasets.length})</span>
+                            </h4>
+                    `;
+
+                    categoryDatasets.forEach((dataset, idx) => {
+                        content += `
+                            <div style="background: #f8f9fa; border-left: 3px solid #20B2AA; padding: 12px; margin-bottom: 10px; border-radius: 4px; transition: all 0.2s;"
+                                 onmouseover="this.style.background='#e3f2fd'; this.style.transform='translateX(5px)';"
+                                 onmouseout="this.style.background='#f8f9fa'; this.style.transform='translateX(0)';">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div style="font-weight: 600; color: #2c3e50; font-size: 13px; flex: 1; line-height: 1.4;">
+                                        ${dataset.title}
+                                    </div>
+                                    <div style="background: #20B2AA; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; white-space: nowrap; margin-left: 10px;">
+                                        ${dataset.year}
+                                    </div>
+                                </div>
+                                <div style="font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 10px;">
+                                    ${dataset.description}
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-size: 11px; color: #999;">
+                                        Dataset ID: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">${dataset.id}</code>
+                                    </div>
+                                    <a href="${dataset.link}" target="_blank"
+                                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: 600; transition: all 0.2s;"
+                                       onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';"
+                                       onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                                        📖 View Metadata at VLIZ
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    content += `</div>`;
+                }
+            });
+
+            content += `
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; font-size: 12px; line-height: 1.6;">
+                    <strong style="color: #92400e;">ℹ️ About MARBEFES:</strong>
+                    <div style="color: #78350f; margin-top: 5px;">
+                        Marine Biodiversity and Ecosystem Functioning across European Seas - studying marine ecosystems from river-to-ocean gradients.
+                        <br><a href="https://www.vliz.be/en/imis?module=project&proid=5393" target="_blank" style="color: #20B2AA; text-decoration: none;">
+                            View full project at VLIZ →
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
 
         const contentEl = document.getElementById('bbt-popup-content');
         if (contentEl) {
             contentEl.innerHTML = content;
         }
 
-        debug.log(`🌊 Bathymetry section included: ${bathymetrySection ? 'YES' : 'NO'}`);
-        debug.log(`🌊 Content length: ${content.length} characters`);
-
-        // Store current BBT name for saving
+        // Store current BBT name
         const overlayEl = document.getElementById('bbt-popup-overlay');
         if (overlayEl) {
             overlayEl.dataset.currentBbt = bbtName;
             overlayEl.classList.add('active');
         }
+
+        debug.log(`📊 Displayed ${datasets ? datasets.length : 0} datasets for ${bbtName}`);
     }
 
     /**
