@@ -44,6 +44,8 @@ class VectorLayerLoader:
         self._gdf_cache: OrderedDict[str, gpd.GeoDataFrame] = OrderedDict()
         # GeoJSON cache: Store serialized GeoJSON for 50-70% faster API responses
         self._geojson_cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        # File modification tracking for automatic reload detection
+        self._file_mtimes: Dict[str, float] = {}
 
         # Default styles by geometry type
         self.default_styles = {
@@ -389,6 +391,13 @@ class VectorLayerLoader:
             file_ext = vector_path.suffix.lower()
             self.logger.info(f"Processing {file_ext} file: {vector_path}")
 
+            # Track file modification time for change detection
+            try:
+                mtime = vector_path.stat().st_mtime
+                self._file_mtimes[str(vector_path)] = mtime
+            except Exception as e:
+                self.logger.warning(f"Could not get modification time for {vector_path}: {e}")
+
             # Route to appropriate handler based on file extension
             if file_ext == '.geojson':
                 # Get layer information from GeoJSON
@@ -563,6 +572,62 @@ class VectorLayerLoader:
             layer_dict.pop("file_path", None)
             summary.append(layer_dict)
         return summary
+
+    def check_files_changed(self) -> bool:
+        """
+        Check if any vector files have been modified since last load
+
+        Returns:
+            bool: True if any files have changed, False otherwise
+        """
+        vector_files = self.discover_gpkg_files()
+
+        for vector_path in vector_files:
+            try:
+                current_mtime = vector_path.stat().st_mtime
+                stored_mtime = self._file_mtimes.get(str(vector_path))
+
+                if stored_mtime is None:
+                    # New file detected
+                    self.logger.info(f"New file detected: {vector_path}")
+                    return True
+
+                if current_mtime != stored_mtime:
+                    # File has been modified
+                    self.logger.info(f"File modified: {vector_path}")
+                    return True
+
+            except Exception as e:
+                self.logger.warning(f"Could not check modification time for {vector_path}: {e}")
+
+        # Check if any files were removed
+        current_files = {str(f) for f in vector_files}
+        tracked_files = set(self._file_mtimes.keys())
+
+        if tracked_files != current_files:
+            removed_files = tracked_files - current_files
+            if removed_files:
+                self.logger.info(f"Files removed: {removed_files}")
+                return True
+
+        return False
+
+    def reload_if_changed(self) -> bool:
+        """
+        Check for file changes and reload if necessary
+
+        Returns:
+            bool: True if files were reloaded, False otherwise
+        """
+        if self.check_files_changed():
+            self.logger.info("Vector file changes detected, reloading...")
+            # Clear caches to ensure fresh data
+            self._gdf_cache.clear()
+            self._geojson_cache.clear()
+            # Reload all layers
+            self.load_all_vector_layers()
+            return True
+        return False
 
     def create_bounds_summary(self) -> Dict[str, Any]:
         """Create a summary of bounds for all layers"""

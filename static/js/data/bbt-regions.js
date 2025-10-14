@@ -1,12 +1,12 @@
 /**
  * BBT (Biodiversity and Ecosystem Functioning) Region Information Database
  *
- * This module provides detailed information about all 11 BBT study areas
+ * This module provides detailed information about all 12 BBT study areas
  * across European marine regions. Data is shared between layer-manager.js
  * and bbt-tool.js to maintain consistency and reduce duplication.
  *
  * @module BBTRegionData
- * @version 1.2.2
+ * @version 1.2.6
  * @description Comprehensive metadata for MARBEFES BBT areas
  *
  * Each region contains:
@@ -25,7 +25,7 @@
 
     /**
      * BBT Region Information Database
-     * 11 study areas across European seas
+     * 12 study areas across European seas (including Porsangerfjord added in v1.2.6)
      */
     window.BBTRegionData = {
         'Archipelago': {
@@ -87,6 +87,12 @@
             description: 'Semi-enclosed temperate marine ecosystem',
             habitat: 'Coastal and shelf habitats with tidal dynamics',
             research_focus: 'Marine spatial planning and biodiversity conservation'
+        },
+        'Porsangerfjord': {
+            region: 'Arctic Ocean',
+            description: 'Arctic fjord system in northern Norway',
+            habitat: 'Subarctic coastal communities with tidal influence',
+            research_focus: 'Arctic ecosystem dynamics and fisheries interactions'
         },
         'Sardinia': {
             region: 'Mediterranean Sea',
