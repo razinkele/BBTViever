@@ -7,6 +7,7 @@ import os
 import sys
 import json
 from pathlib import Path
+from datetime import datetime, timezone
 from xml.etree import ElementTree as ET
 
 # Third-party imports
@@ -196,6 +197,36 @@ def load_factsheet_data():
 # Load data on startup for performance (cached in memory)
 BATHYMETRY_STATS = load_bathymetry_stats()
 FACTSHEET_DATA = load_factsheet_data()
+
+def load_bundle_manifest():
+    """
+    Load JavaScript bundle manifest for cache-busting
+
+    Returns:
+        dict: Bundle manifest or fallback dict if not available
+    """
+    manifest_file = Path("static/dist/bundle-manifest.json")
+    if manifest_file.exists():
+        try:
+            with open(manifest_file, 'r', encoding='utf-8') as f:
+                manifest = json.load(f)
+                logger.info(f"Loaded bundle manifest: v{manifest.get('version')} (hash: {manifest.get('content_hash')})")
+                return manifest
+        except Exception as e:
+            logger.warning(f"Failed to load bundle manifest: {e}")
+
+    # Fallback to non-versioned bundles
+    logger.info("Bundle manifest not found, using fallback bundle names")
+    return {
+        "version": __version__,
+        "bundles": {
+            "development": "app.bundle.js",
+            "production": "app.bundle.min.js"
+        }
+    }
+
+# Load bundle manifest on startup
+BUNDLE_MANIFEST = load_bundle_manifest()
 
 
 # Layer filter functions (named for clarity and debugging)
@@ -436,6 +467,8 @@ def index():
         vector_layers=all_layers["vector_layers"],
         vector_support=all_layers["vector_support"],
         bathymetry_stats=BATHYMETRY_STATS,
+        bundle_manifest=BUNDLE_MANIFEST,
+        app_version=__version__,
         WMS_BASE_URL=WMS_BASE_URL,
         HELCOM_WMS_BASE_URL=HELCOM_WMS_BASE_URL,
         APPLICATION_ROOT=app_root,
@@ -454,17 +487,14 @@ def health_check():
     Returns:
         JSON with health status and component availability
     """
+    # Get current timestamp (using timezone-aware datetime for Python 3.12+ compatibility)
     health_status = {
         "status": "healthy",
-        "timestamp": None,  # Will be set below
+        "timestamp": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
         "version": __version__,
         "version_date": __version_date__,
         "components": {}
     }
-
-    # Get current timestamp (using timezone-aware datetime for Python 3.12+ compatibility)
-    from datetime import datetime, timezone
-    health_status["timestamp"] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
     # Check vector support
     health_status["components"]["vector_support"] = {

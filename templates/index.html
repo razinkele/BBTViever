@@ -5,17 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Preconnect to external resources for faster loading -->
+    <!-- Preconnect to critical CDN resources (loaded immediately) -->
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://ows.emodnet-seabedhabitats.eu">
-    <link rel="preconnect" href="https://helcom.fi">
     <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <!-- WMS/HELCOM preconnects moved to dynamic loading when layers are selected -->
 
     <!-- External CSS Dependencies -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v={{ app_version }}">
 
     <!-- External JavaScript Dependencies -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -441,6 +440,8 @@
         window.vectorLayers = {{ vector_layers | tojson }};
     </script>
 
+    {% if config.DEBUG %}
+    <!-- DEVELOPMENT MODE: Individual JavaScript files for debugging -->
     <!-- Debug Utility (must load before other modules) -->
     <script src="{{ url_for('static', filename='js/utils/debug.js') }}"></script>
 
@@ -454,6 +455,7 @@
         debug.log('  - WMS layers:', window.wmsLayers ? window.wmsLayers.length : 0);
         debug.log('  - HELCOM layers:', window.helcomLayers ? window.helcomLayers.length : 0);
         debug.log('  - Vector layers:', window.vectorLayers ? window.vectorLayers.length : 0);
+        debug.log('🔧 Development mode: Loading individual JavaScript modules');
     </script>
 
     <!-- Application JavaScript Modules (loaded in correct dependency order) -->
@@ -463,6 +465,18 @@
     <script src="{{ url_for('static', filename='js/bbt-tool.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui-handlers.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% else %}
+    <!-- PRODUCTION MODE: Optimized minified bundle with cache-busting -->
+    <!-- Bundle: {{ bundle_manifest.bundles.production }} (v{{ bundle_manifest.version }}, hash: {{ bundle_manifest.content_hash }}) -->
+    <script src="{{ url_for('static', filename='dist/' + bundle_manifest.bundles.production) }}"></script>
+    <script>
+        console.log('🚀 Production mode: Loaded optimized bundle');
+        console.log('   Version: {{ bundle_manifest.version }}');
+        console.log('   Hash: {{ bundle_manifest.content_hash }}');
+        console.log('   Size: {{ bundle_manifest.sizes.production_kb }}KB ({{ bundle_manifest.sizes.reduction_percent }}% reduction)');
+        console.log('📊 Template data: WMS=' + (window.wmsLayers?.length || 0) + ', HELCOM=' + (window.helcomLayers?.length || 0) + ', Vector=' + (window.vectorLayers?.length || 0));
+    </script>
+    {% endif %}
 
     <!-- Version Info Modal Functions -->
     <script>
