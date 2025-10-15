@@ -1106,7 +1106,14 @@ window.setBBTZoomMode = function(mode) {
 
 // BBT Detail Zoom Level Update Function
 window.updateBBTZoomLevel = function(level) {
-    const zoomLevel = parseInt(level);
+    let zoomLevel = parseInt(level);
+
+    // Enforce minimum zoom level of 12 in detail mode (EUNIS threshold)
+    if (window.bbtZoomMode === 'detail' && zoomLevel < 12) {
+        debug.warn(`⚠️ Zoom level ${zoomLevel} is below EUNIS threshold, enforcing minimum of 12`);
+        zoomLevel = 12;
+    }
+
     window.bbtDetailZoomLevel = zoomLevel;
 
     // Update display value
@@ -1131,5 +1138,5 @@ if (typeof window.bbtZoomMode === 'undefined') {
     window.bbtZoomMode = 'detail'; // Default to full detail mode
 }
 if (typeof window.bbtDetailZoomLevel === 'undefined') {
-    window.bbtDetailZoomLevel = 11; // Default zoom level
+    window.bbtDetailZoomLevel = 12; // Default zoom level (aligned with EUNIS threshold)
 }

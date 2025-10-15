@@ -1,0 +1,200 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                 MARBEFES BBT v1.2.7 - Quick Reference Card                    ║
+║                    Zoom Threshold Alignment Release                           ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WHAT'S NEW IN v1.2.7                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ ✓ Default BBT zoom: 11 → 12 (aligned with EUNIS threshold)                 │
+│ ✓ Status display: zoom 6 → 12 (matches data switching)                     │
+│ ✓ Zoom validation: Added (enforces minimum zoom 12 in detail mode)         │
+│ ✓ Enhanced tooltips: Shows current zoom and proximity to threshold         │
+│                                                                             │
+│ Files Modified: static/js/bbt-tool.js, static/js/layer-manager.js          │
+│ Downtime: 2-5 minutes                                                       │
+│ Risk: Low (JavaScript-only, no backend changes)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ QUICK DEPLOYMENT (3 options)                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ OPTION A: Automated Script (Fastest - 2 minutes)                           │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   ./DEPLOY_QUICK_v1.2.7.sh                                                  │
+│                                                                             │
+│ OPTION B: Manual Commands (5 minutes)                                      │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   # 1. Stop service                                                         │
+│   ssh razinka@laguna.ku.lt "sudo systemctl stop marbefes-bbt"              │
+│                                                                             │
+│   # 2. Deploy files                                                         │
+│   rsync -avz static/js/bbt-tool.js \                                        │
+│       razinka@laguna.ku.lt:/var/www/marbefes-bbt/static/js/                │
+│   rsync -avz static/js/layer-manager.js \                                   │
+│       razinka@laguna.ku.lt:/var/www/marbefes-bbt/static/js/                │
+│                                                                             │
+│   # 3. Add cache-busting                                                    │
+│   ssh razinka@laguna.ku.lt "cd /var/www/marbefes-bbt && \                  │
+│       sed -i 's|bbt-tool.js|bbt-tool.js?v=1.2.7|g' templates/index.html && \│
+│       sed -i 's|layer-manager.js|layer-manager.js?v=1.2.7|g' \             │
+│           templates/index.html"                                             │
+│                                                                             │
+│   # 4. Start service                                                        │
+│   ssh razinka@laguna.ku.lt "sudo systemctl start marbefes-bbt"             │
+│                                                                             │
+│ OPTION C: Full Manual Process (10-15 minutes)                              │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   See: MANUAL_DEPLOYMENT_v1.2.7.md                                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VERIFICATION (Run after deployment)                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   # Health check                                                            │
+│   curl -s http://laguna.ku.lt/BBT/health | jq '.version'                   │
+│   → Expected: "1.2.7"                                                       │
+│                                                                             │
+│   # Service status                                                          │
+│   ssh razinka@laguna.ku.lt "sudo systemctl status marbefes-bbt"            │
+│   → Expected: "Active: active (running)"                                    │
+│                                                                             │
+│   # Verify zoom fix                                                         │
+│   ssh razinka@laguna.ku.lt \                                                │
+│       "grep 'window.bbtDetailZoomLevel = 12' \                              │
+│        /var/www/marbefes-bbt/static/js/bbt-tool.js"                        │
+│   → Expected: window.bbtDetailZoomLevel = 12;                               │
+│                                                                             │
+│   # Browser test (manual)                                                   │
+│   1. Open http://laguna.ku.lt/BBT                                           │
+│   2. Hard refresh: Ctrl+Shift+R                                             │
+│   3. Click any BBT button → should zoom to level 12 (not 11)               │
+│   4. Zoom out to 11 → tooltip shows gold "Zoom in 1 more level..." message │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ROLLBACK (If needed)                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   # Find backup (created during deployment)                                │
+│   ssh razinka@laguna.ku.lt "ls -lht /var/www/marbefes-bbt-backups/ | head" │
+│                                                                             │
+│   # Restore backup (replace TIMESTAMP with actual value)                   │
+│   ssh razinka@laguna.ku.lt "cd /var/www/marbefes-bbt && \                  │
+│       sudo tar -xzf /var/www/marbefes-bbt-backups/backup_v1.2.6_TIMESTAMP.tar.gz && \
+│       sudo systemctl restart marbefes-bbt"                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ Problem: Service won't start                                               │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   ssh razinka@laguna.ku.lt "sudo journalctl -u marbefes-bbt -n 50"         │
+│   ssh razinka@laguna.ku.lt "sudo lsof -i :5000"  # Check port conflicts    │
+│                                                                             │
+│ Problem: Old JavaScript still loading (cached)                             │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   # Server: Verify files updated                                           │
+│   ssh razinka@laguna.ku.lt \                                                │
+│       "stat /var/www/marbefes-bbt/static/js/bbt-tool.js | grep Modify"     │
+│                                                                             │
+│   # Server: Clear nginx cache                                              │
+│   ssh razinka@laguna.ku.lt "sudo systemctl reload nginx"                   │
+│                                                                             │
+│   # Browser: Hard refresh (Ctrl+Shift+R)                                   │
+│   # Browser: Clear all cached files                                        │
+│                                                                             │
+│ Problem: 502 Bad Gateway                                                   │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   ssh razinka@laguna.ku.lt "pgrep -a gunicorn"  # Check if running         │
+│   ssh razinka@laguna.ku.lt "sudo systemctl restart marbefes-bbt nginx"     │
+│                                                                             │
+│ Problem: Zoom fixes not working                                            │
+│ ───────────────────────────────────────────────────────────────────────────│
+│   # Verify code in production                                              │
+│   ssh razinka@laguna.ku.lt \                                                │
+│       "grep -n 'window.bbtDetailZoomLevel = 12' \                           │
+│        /var/www/marbefes-bbt/static/js/bbt-tool.js"                        │
+│                                                                             │
+│   # Browser console check                                                  │
+│   # F12 → Console → Type: window.bbtDetailZoomLevel                        │
+│   # Expected: 12                                                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ USEFUL COMMANDS                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   # Service management                                                      │
+│   ssh razinka@laguna.ku.lt "sudo systemctl status marbefes-bbt"            │
+│   ssh razinka@laguna.ku.lt "sudo systemctl restart marbefes-bbt"           │
+│   ssh razinka@laguna.ku.lt "sudo systemctl stop marbefes-bbt"              │
+│   ssh razinka@laguna.ku.lt "sudo systemctl start marbefes-bbt"             │
+│                                                                             │
+│   # Live logs                                                               │
+│   ssh razinka@laguna.ku.lt "sudo journalctl -u marbefes-bbt -f"            │
+│                                                                             │
+│   # Test endpoints                                                          │
+│   curl http://laguna.ku.lt/BBT/health                                       │
+│   curl http://laguna.ku.lt/BBT/api/vector/layers                            │
+│   curl -I http://laguna.ku.lt/BBT/                                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SERVER INFORMATION                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Server:             laguna.ku.lt                                          │
+│   User:               razinka                                               │
+│   App Directory:      /var/www/marbefes-bbt                                │
+│   Service Name:       marbefes-bbt                                          │
+│   Application URL:    http://laguna.ku.lt/BBT                               │
+│   Subpath:            /BBT                                                  │
+│   Python Env:         /var/www/marbefes-bbt/venv                           │
+│   Logs:               sudo journalctl -u marbefes-bbt                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ VERSION COMPARISON                                                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   Component             │ v1.2.6 (Old) │ v1.2.7 (New) │                    │
+│   ────────────────────────────────────────────────────                     │
+│   Default BBT Zoom      │     11       │     12       │ ← Main fix         │
+│   Status Threshold      │     6        │     12       │ ← Alignment        │
+│   Zoom Validation       │   None       │  Enforced    │ ← New feature      │
+│   Tooltip Guidance      │  Generic     │   Specific   │ ← UX improvement   │
+│                                                                             │
+│   Breaking Changes:     None                                                │
+│   Database Changes:     None                                                │
+│   Backend Changes:      None (JavaScript only)                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║ DOCUMENTATION                                                                 ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║   Full Manual:        MANUAL_DEPLOYMENT_v1.2.7.md                            ║
+║   Automated Script:   DEPLOY_QUICK_v1.2.7.sh                                 ║
+║   This Quick Ref:     DEPLOY_QUICKREF_v1.2.7.txt                             ║
+║   General Guide:      DEPLOYMENT_GUIDE.md                                    ║
+║                                                                               ║
+║   Git Repository:     git log --oneline -5                                   ║
+║   Version File:       src/emodnet_viewer/__version__.py                      ║
+║   Project Docs:       CLAUDE.md                                              ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+Last Updated: 2025-10-15
+Document Version: 1.0

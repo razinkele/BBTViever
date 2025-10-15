@@ -326,7 +326,13 @@
                 }
 
                 // Note: Factsheet data is available in the BBT Data popup (📊 button)
-                content += `<div style="font-size: 9px; margin-top: 4px; color: #A0AEC0; font-style: italic;">💡 Zoom in closer (≥12) to see EUNIS habitat data</div>`;
+                // Provide specific guidance based on how close user is to threshold
+                const zoomDifference = 12 - currentZoom;
+                if (zoomDifference === 1) {
+                    content += `<div style="font-size: 9px; margin-top: 4px; color: #FFD700; font-style: italic;">💡 Zoom in 1 more level to see EUNIS habitat data (currently at ${currentZoom})</div>`;
+                } else {
+                    content += `<div style="font-size: 9px; margin-top: 4px; color: #A0AEC0; font-style: italic;">💡 Zoom in closer (≥12) to see EUNIS habitat data (currently at ${currentZoom})</div>`;
+                }
             }
         } else {
             // Generic vector layer tooltip
@@ -982,7 +988,7 @@
         // Update status tooltip
         const statusTooltip = document.getElementById('emodnet-status-tooltip');
         if (statusTooltip) {
-            const simplificationLevel = currentZoom < 6 ? '800m (overview)' : 'full detail';
+            const simplificationLevel = currentZoom < 12 ? '800m (simplified)' : 'full detail';
             statusTooltip.textContent = `EUNIS 2019 - ${simplificationLevel}`;
             statusTooltip.style.color = '#20B2AA';
         }
