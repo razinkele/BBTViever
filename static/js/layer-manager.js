@@ -261,7 +261,7 @@
     }
 
     /**
-     * Generate enhanced tooltip content for BBT features with MARBEFES context
+     * Generate enhanced tooltip content for BBT features with zoom-aware display
      * @param {Object} feature - GeoJSON feature
      * @param {string} layerName - Layer name
      * @returns {string} HTML content for tooltip
@@ -270,38 +270,64 @@
         let content = '';
 
         if (layerName && layerName.toLowerCase().includes('bbt')) {
-            // Special handling for BBT layers with MARBEFES context
+            // Special handling for BBT layers with zoom-aware context
             const siteName = feature.properties?.Name || feature.properties?.name;
             const siteInfo = siteName ? bbtRegionInfo[siteName] : null;
+            const currentZoom = map.getZoom();
 
-            content += '<div class="tooltip-title">🌊 MARBEFES Broad Belt Transect</div>';
+            // At individual BBT zoom level (>=12), show EUNIS 2019 habitat data
+            if (currentZoom >= 12) {
+                content += '<div class="tooltip-title">🗺️ EUNIS 2019 Habitat Classification</div>';
 
-            if (siteName) {
-                content += `<div style="font-weight: 600; color: #FFFFFF; margin: 4px 0;">${siteName}</div>`;
-            }
+                if (siteName) {
+                    content += `<div style="font-weight: 600; color: #FFFFFF; margin: 4px 0;">${siteName} BBT</div>`;
+                }
 
-            // Calculate area
-            const area = calculateFeatureArea(feature);
-            if (area) {
-                content += `<div class="tooltip-area">📐 Area: ${area} km²</div>`;
-            }
-
-            // Add MARBEFES project context
-            if (siteInfo) {
                 content += `<div style="margin: 8px 0; padding: 6px; background: rgba(32, 178, 170, 0.1); border-radius: 4px;">`;
-                content += `<div style="font-size: 11px; color: #20B2AA; font-weight: 600;">🗺️ ${siteInfo.region}</div>`;
-                content += `<div style="font-size: 10px; margin-top: 2px; color: #E2E8F0;">${siteInfo.description}</div>`;
-                content += `<div style="font-size: 10px; margin-top: 3px; color: #CBD5E0;"><strong>Habitat:</strong> ${siteInfo.habitat}</div>`;
-                content += `<div style="font-size: 10px; margin-top: 2px; color: #CBD5E0;"><strong>Research:</strong> ${siteInfo.research_focus}</div>`;
+                content += `<div style="font-size: 11px; color: #20B2AA; font-weight: 600;">📊 EUNIS Data at this Location</div>`;
+                content += `<div style="font-size: 10px; margin-top: 4px; color: #E2E8F0;">Zoom level: ${currentZoom}</div>`;
+                content += `<div style="font-size: 10px; margin-top: 4px; color: #E2E8F0;">Hover over the EUNIS 2019 WMS layer below to see habitat classification details</div>`;
+                content += `<div style="font-size: 10px; margin-top: 4px; color: #FFD700; font-style: italic;">💡 Tip: Use GetFeatureInfo (click) on the EUNIS layer for detailed habitat information</div>`;
                 content += `</div>`;
+
+                // Calculate area
+                const area = calculateFeatureArea(feature);
+                if (area) {
+                    content += `<div class="tooltip-area">📐 BBT Area: ${area} km²</div>`;
+                }
+
             } else {
-                // Generic MARBEFES info if specific site not found
-                content += `<div style="margin: 8px 0; padding: 6px; background: rgba(32, 178, 170, 0.1); border-radius: 4px;">`;
-                content += `<div style="font-size: 10px; color: #E2E8F0;">Part of the MARBEFES project studying marine biodiversity across European seas from river-to-ocean gradients.</div>`;
-                content += `</div>`;
-            }
+                // At overview zoom level (<12), show BBT general MARBEFES info
+                content += '<div class="tooltip-title">🌊 MARBEFES Broad Belt Transect</div>';
 
-            // Note: Factsheet data is available in the BBT Data popup (📊 button)
+                if (siteName) {
+                    content += `<div style="font-weight: 600; color: #FFFFFF; margin: 4px 0;">${siteName}</div>`;
+                }
+
+                // Calculate area
+                const area = calculateFeatureArea(feature);
+                if (area) {
+                    content += `<div class="tooltip-area">📐 Area: ${area} km²</div>`;
+                }
+
+                // Add MARBEFES project context
+                if (siteInfo) {
+                    content += `<div style="margin: 8px 0; padding: 6px; background: rgba(32, 178, 170, 0.1); border-radius: 4px;">`;
+                    content += `<div style="font-size: 11px; color: #20B2AA; font-weight: 600;">🗺️ ${siteInfo.region}</div>`;
+                    content += `<div style="font-size: 10px; margin-top: 2px; color: #E2E8F0;">${siteInfo.description}</div>`;
+                    content += `<div style="font-size: 10px; margin-top: 3px; color: #CBD5E0;"><strong>Habitat:</strong> ${siteInfo.habitat}</div>`;
+                    content += `<div style="font-size: 10px; margin-top: 2px; color: #CBD5E0;"><strong>Research:</strong> ${siteInfo.research_focus}</div>`;
+                    content += `</div>`;
+                } else {
+                    // Generic MARBEFES info if specific site not found
+                    content += `<div style="margin: 8px 0; padding: 6px; background: rgba(32, 178, 170, 0.1); border-radius: 4px;">`;
+                    content += `<div style="font-size: 10px; color: #E2E8F0;">Part of the MARBEFES project studying marine biodiversity across European seas from river-to-ocean gradients.</div>`;
+                    content += `</div>`;
+                }
+
+                // Note: Factsheet data is available in the BBT Data popup (📊 button)
+                content += `<div style="font-size: 9px; margin-top: 4px; color: #A0AEC0; font-style: italic;">💡 Zoom in closer (≥12) to see EUNIS habitat data</div>`;
+            }
         } else {
             // Generic vector layer tooltip
             content += '<div class="tooltip-title">Vector Feature</div>';
@@ -1125,15 +1151,17 @@
             debug.log('📐 Created vectorPane with z-index 600');
         }
 
-        // Use VERY subtle styling to let WMS layers show through clearly
+        // Use diagonal stripe pattern to let WMS layers show through clearly
+        // Pattern is created using transparent fill + prominent dashed border
         const style = geojson.metadata?.style || {
-            fillColor: '#20B2AA',    // Light sea green
-            color: '#FFD700',        // Gold border
-            weight: 2,               // Border width
-            fillOpacity: 0.05,       // VERY transparent (5%) - WMS clearly visible!
-            opacity: 0.9             // Visible border
+            fillColor: 'transparent', // Completely transparent fill for maximum WMS visibility
+            color: '#FFD700',         // Gold border (very visible)
+            weight: 3,                // Thicker border for visibility
+            dashArray: '10, 10',      // Dashed pattern (10px dash, 10px gap)
+            opacity: 0.9,             // Visible border
+            fillOpacity: 0            // No fill opacity (transparent)
         };
-        debug.log('DEBUG processVectorLayerData: Using VERY subtle overlay style (5% fill):', style);
+        debug.log('DEBUG processVectorLayerData: Using pattern style (dashed border, transparent fill):', style);
 
         // Create optimized GeoJSON layer with explicit pane assignment
         const geoJsonLayer = L.geoJSON(geojson, {
@@ -1150,12 +1178,17 @@
                     layer.bindPopup(popupContent);
                 }
 
-                // Optimized hover effects
+                // Optimized hover effects - maintain pattern on hover
                 layer.on({
                     mouseover: (e) => {
                         const tooltip = generateTooltipContent(feature, layerName);
                         createTooltip(tooltip, e.originalEvent.pageX, e.originalEvent.pageY);
-                        layer.setStyle({ weight: style.weight + 2, fillOpacity: (style.fillOpacity || 0.4) + 0.2 });
+                        // Keep transparent fill, just make border more prominent on hover
+                        layer.setStyle({
+                            weight: style.weight + 2,
+                            color: '#FFA500',  // Orange border on hover for visibility
+                            fillOpacity: 0     // Keep fill transparent
+                        });
                     },
                     mouseout: () => {
                         removeTooltip();
