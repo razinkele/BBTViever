@@ -540,7 +540,9 @@
             z-index: 1000;
             max-width: 250px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            white-space: nowrap;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             transform: translateX(-50%);
         }
 

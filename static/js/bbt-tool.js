@@ -89,7 +89,7 @@ const BBTTool = (function() {
         debug.log('🔄 Loading BBT features from API...');
 
         try {
-            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt')}`;
+            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Mergedbbts')}`;
             debug.log('📡 Fetching from URL:', apiUrl);
 
             const response = await fetch(apiUrl);
@@ -319,7 +319,7 @@ const BBTTool = (function() {
             // Auto-load vector layer if not already loaded (requires global context)
             if (typeof window.selectVectorLayerAsBase === 'function') {
                 if (window.currentLayerType !== 'vector' || !window.vectorLayerGroup?.getLayers().length) {
-                    window.selectVectorLayerAsBase('Bbt');
+                    window.selectVectorLayerAsBase('Mergedbbts');
                 }
             }
         }
@@ -352,7 +352,7 @@ const BBTTool = (function() {
 
         // Set layer selection state (requires global context)
         if (typeof window.currentLayer !== 'undefined') {
-            window.currentLayer = 'Bbt';
+            window.currentLayer = 'Mergedbbts';
             window.currentLayerType = 'vector';
         }
 
@@ -374,7 +374,7 @@ const BBTTool = (function() {
                 }
 
                 // Check if BBT layer is already loaded (optimization: skip re-rendering if already visible)
-                const isBBTLayerLoaded = window.currentLayer === 'Bbt' &&
+                const isBBTLayerLoaded = window.currentLayer === 'Mergedbbts' &&
                                         window.vectorLayerGroup &&
                                         window.vectorLayerGroup.getLayers().length > 0;
 
@@ -387,7 +387,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Bbt', bbtFeatureData);
+                        window.loadVectorLayerWithoutAutoZoom('Mergedbbts', bbtFeatureData);
                     }
                 } else {
                     debug.log('⚡ BBT layer already loaded, skipping re-render!');
@@ -414,7 +414,7 @@ const BBTTool = (function() {
         }
 
         // Load the BBT vector layer data
-        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Bbt')}`)
+        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Mergedbbts')}`)
             .then(response => {
                 debug.log('📥 BBT layer API response:', response.status);
                 if (!response.ok) {
@@ -441,7 +441,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Bbt', geojson);
+                        window.loadVectorLayerWithoutAutoZoom('Mergedbbts', geojson);
                     }
 
                     // Then zoom directly to the specific feature with optimized timing
@@ -452,7 +452,7 @@ const BBTTool = (function() {
                     debug.log('⚠️ Specific feature not found, loading full layer...');
                     // Fallback to fast cached loading
                     if (typeof window.loadVectorLayerFast === 'function') {
-                        window.loadVectorLayerFast('Bbt');
+                        window.loadVectorLayerFast('Mergedbbts');
                     }
                 }
             })
@@ -881,15 +881,6 @@ const BBTTool = (function() {
             });
 
             content += `
-                </div>
-                <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fbbf24; border-radius: 8px; font-size: 12px; line-height: 1.6;">
-                    <strong style="color: #92400e;">ℹ️ About MARBEFES:</strong>
-                    <div style="color: #78350f; margin-top: 5px;">
-                        Marine Biodiversity and Ecosystem Functioning across European Seas - studying marine ecosystems from river-to-ocean gradients.
-                        <br><a href="https://www.vliz.be/en/imis?module=project&proid=5393" target="_blank" style="color: #20B2AA; text-decoration: none;">
-                            View full project at VLIZ →
-                        </a>
-                    </div>
                 </div>
             `;
         }

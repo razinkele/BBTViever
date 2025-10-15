@@ -315,6 +315,25 @@
             }
         ],
 
+        'Porsangerfjord': [
+            {
+                id: '8886',
+                title: 'Social data from cultural ecosystem valuation',
+                link: 'https://www.vliz.be/en/imis?module=dataset&dasid=8886',
+                description: 'Questionnaire data on cultural ecosystem services across European case studies (Sep 2023 - Jun 2026).',
+                category: 'Socio-Economic',
+                year: '2023-2026'
+            },
+            {
+                id: '8900',
+                title: 'Stakeholder consultation results from MARBEFES BBT Areas',
+                link: 'https://www.vliz.be/en/imis?module=dataset&dasid=8900',
+                description: 'Ecological, economic, and socio-cultural consultation results across European marine areas (2023).',
+                category: 'Socio-Economic',
+                year: '2023'
+            }
+        ],
+
         'North Sea': [
             {
                 id: '8686',

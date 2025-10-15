@@ -66,7 +66,7 @@ This release implements all Priority 1 performance optimizations, delivering sig
 | Performance Monitoring | None | Full instrumentation | **Real-time metrics** |
 
 #### 1. Response Compression (Flask-Compress)
-- **Added**: `Flask-Compress==1.15` to requirements.txt
+- **Added**: `Flask-Compress==1.18` to requirements.txt
 - **Configured**: Compression level 6, 500-byte minimum threshold
 - **Impact**: 84% reduction in GeoJSON transfer size (8MB → 1.3MB)
 - **Supported Formats**: gzip, brotli, zstandard (automatic content negotiation)
@@ -142,7 +142,7 @@ PerformanceMonitor.flushNow();
 
 #### Files Modified for P1 Optimizations
 - `templates/index.html` - Added preconnect hints
-- `requirements.txt` - Added Flask-Compress==1.15
+- `requirements.txt` - Added Flask-Compress==1.18
 - `app.py` - Flask-Compress configuration + /api/metrics endpoint
 - `.gitignore` - Added node_modules/, package-lock.json
 
@@ -180,7 +180,7 @@ debug.info('User message');     // Always shown
 #### 2. BBT Region Data Deduplication
 - **Created**: `static/js/data/bbt-regions.js` - Shared BBT region data module
 - **Eliminated**: 136 lines of duplicated code across 2 files
-- **Single Source**: All 11 BBT areas defined once, used everywhere
+- **Single Source**: All 12 BBT areas defined once, used everywhere
 - **Added**: Helper functions (`getBBTRegionInfo()`, `getAllBBTRegionNames()`, `getBBTRegionsBySeaArea()`)
 - **Maintainability**: Update region info in one place, reflects everywhere
 - **Files Modified**: `layer-manager.js`, `bbt-tool.js` now reference shared module
@@ -229,7 +229,7 @@ DEFAULT_MAP_ZOOM=4
 - **Critical Fix**: Resolved BBT vector layer display issue (pandas/pyogrio compatibility)
 - **Dependency Change**: Downgraded pandas from 2.2.3 to 2.0.3 for pyogrio 0.11.1 compatibility
 - **Error Handling**: Enhanced vector loader with robust fiona fallback and numpy type conversion
-- **Testing**: Verified all 11 BBT areas loading successfully
+- **Testing**: Verified all 12 BBT areas loading successfully
 
 ### Previous Release (v1.2.0)
 - **Security Enhancement**: Smart host binding - `127.0.0.1` in development (secure by default), `0.0.0.0` in production (network-accessible). Override with `FLASK_HOST` environment variable.
