@@ -367,15 +367,13 @@ class VectorLayerLoader:
         return geom
 
     def _create_display_name(self, file_stem: str, layer_name: str) -> str:
-        """Create a user-friendly display name"""
+        """Create display name preserving original case from filename"""
         if layer_name.lower() == file_stem.lower():
-            # If layer name is same as file, just use file name
-            return file_stem.replace("_", " ").title()
+            # If layer name is same as file, use file name preserving case
+            return file_stem
         else:
-            # Include both file and layer name
-            file_display = file_stem.replace("_", " ").title()
-            layer_display = layer_name.replace("_", " ").title()
-            return f"{file_display} - {layer_display}"
+            # Include both file and layer name preserving case
+            return f"{file_stem} - {layer_name}"
 
     def load_all_vector_layers(self) -> List[VectorLayer]:
         """Load all vector layers from all GPKG and GeoJSON files"""

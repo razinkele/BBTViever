@@ -39,6 +39,7 @@ This is a Flask-based web application for visualizing EMODnet (European Marine O
    - GeoPandas-based data processing and coordinate system normalization
    - Real-time hover tooltips with geodesic area calculations
    - Leaflet GeometryUtil integration for accurate geometric measurements
+   - **Case-preserving display names**: Filenames like `MergedBBTs.geojson` preserve exact case (not transformed by `.title()`)
 
 ### Data Flow
 - Application queries EMODnet WMS GetCapabilities on startup

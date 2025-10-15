@@ -79,8 +79,8 @@
                 debug.log('DEBUG: Found', window.vectorLayers.length, 'vector layers');
                 debug.log('DEBUG: Available layers:', window.vectorLayers.map(l => l.display_name));
 
-                // Load main BBT layer (try "Mergedbbts" first, fallback to legacy names for backward compatibility)
-                const mainLayer = window.vectorLayers.find(l => l.display_name === 'Mergedbbts' || l.display_name === 'Bbt' || l.display_name === 'Bbt - Merged');
+                // Load main BBT layer (try "MergedBBTs" first, fallback to legacy names for backward compatibility)
+                const mainLayer = window.vectorLayers.find(l => l.display_name === 'MergedBBTs' || l.display_name === 'Bbt' || l.display_name === 'Bbt - Merged');
                 debug.log('DEBUG: mainLayer =', mainLayer);
 
                 if (mainLayer) {
@@ -88,7 +88,7 @@
                     await window.LayerManager.loadVectorLayerFast(mainLayer.display_name);
                     debug.log('✅ Main BBT layer loaded');
                 } else {
-                    debug.warn('⚠️ Could not find BBT layer (tried "Mergedbbts", "Bbt", "Bbt - Merged")');
+                    debug.warn('⚠️ Could not find BBT layer (tried "MergedBBTs", "Bbt", "Bbt - Merged")');
                 }
 
                 // Preload other layers in background

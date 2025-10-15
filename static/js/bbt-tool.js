@@ -89,7 +89,7 @@ const BBTTool = (function() {
         debug.log('🔄 Loading BBT features from API...');
 
         try {
-            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Mergedbbts')}`;
+            const apiUrl = `${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('MergedBBTs')}`;
             debug.log('📡 Fetching from URL:', apiUrl);
 
             const response = await fetch(apiUrl);
@@ -319,7 +319,7 @@ const BBTTool = (function() {
             // Auto-load vector layer if not already loaded (requires global context)
             if (typeof window.selectVectorLayerAsBase === 'function') {
                 if (window.currentLayerType !== 'vector' || !window.vectorLayerGroup?.getLayers().length) {
-                    window.selectVectorLayerAsBase('Mergedbbts');
+                    window.selectVectorLayerAsBase('MergedBBTs');
                 }
             }
         }
@@ -352,7 +352,7 @@ const BBTTool = (function() {
 
         // Set layer selection state (requires global context)
         if (typeof window.currentLayer !== 'undefined') {
-            window.currentLayer = 'Mergedbbts';
+            window.currentLayer = 'MergedBBTs';
             window.currentLayerType = 'vector';
         }
 
@@ -374,7 +374,7 @@ const BBTTool = (function() {
                 }
 
                 // Check if BBT layer is already loaded (optimization: skip re-rendering if already visible)
-                const isBBTLayerLoaded = window.currentLayer === 'Mergedbbts' &&
+                const isBBTLayerLoaded = window.currentLayer === 'MergedBBTs' &&
                                         window.vectorLayerGroup &&
                                         window.vectorLayerGroup.getLayers().length > 0;
 
@@ -387,7 +387,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Mergedbbts', bbtFeatureData);
+                        window.loadVectorLayerWithoutAutoZoom('MergedBBTs', bbtFeatureData);
                     }
                 } else {
                     debug.log('⚡ BBT layer already loaded, skipping re-render!');
@@ -414,7 +414,7 @@ const BBTTool = (function() {
         }
 
         // Load the BBT vector layer data
-        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('Mergedbbts')}`)
+        fetch(`${window.AppConfig.API_BASE_URL}/vector/layer/${encodeURIComponent('MergedBBTs')}`)
             .then(response => {
                 debug.log('📥 BBT layer API response:', response.status);
                 if (!response.ok) {
@@ -441,7 +441,7 @@ const BBTTool = (function() {
 
                     // Load the complete layer WITHOUT auto-zoom
                     if (typeof window.loadVectorLayerWithoutAutoZoom === 'function') {
-                        window.loadVectorLayerWithoutAutoZoom('Mergedbbts', geojson);
+                        window.loadVectorLayerWithoutAutoZoom('MergedBBTs', geojson);
                     }
 
                     // Then zoom directly to the specific feature with optimized timing
@@ -452,7 +452,7 @@ const BBTTool = (function() {
                     debug.log('⚠️ Specific feature not found, loading full layer...');
                     // Fallback to fast cached loading
                     if (typeof window.loadVectorLayerFast === 'function') {
-                        window.loadVectorLayerFast('Mergedbbts');
+                        window.loadVectorLayerFast('MergedBBTs');
                     }
                 }
             })
