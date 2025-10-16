@@ -460,6 +460,17 @@ def index():
     app_root = app.config.get('APPLICATION_ROOT', '')
     api_base_url = f"{app_root}/api" if app_root else "/api"
 
+    # Determine deployment URL based on environment
+    if config.DEBUG:
+        # Development: use localhost with port
+        deployment_url = os.environ.get('PUBLIC_URL', 'http://laguna.ku.lt:5001')
+    else:
+        # Production: use application root path
+        if app_root:
+            deployment_url = f"http://laguna.ku.lt{app_root}"
+        else:
+            deployment_url = os.environ.get('PUBLIC_URL', 'http://laguna.ku.lt:5000')
+
     return render_template(
         'index.html',
         layers=all_layers["wms_layers"],
@@ -469,6 +480,9 @@ def index():
         bathymetry_stats=BATHYMETRY_STATS,
         bundle_manifest=BUNDLE_MANIFEST,
         app_version=__version__,
+        app_version_date=__version_date__,
+        is_development=config.DEBUG,
+        deployment_url=deployment_url,
         WMS_BASE_URL=WMS_BASE_URL,
         HELCOM_WMS_BASE_URL=HELCOM_WMS_BASE_URL,
         APPLICATION_ROOT=app_root,

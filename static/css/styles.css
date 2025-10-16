@@ -791,6 +791,87 @@
     color: #721c24;
 }
 
+.status-badge.status-development {
+    background: #cfe2ff;
+    color: #084298;
+    border: 1px solid #9ec5fe;
+}
+
+.status-badge.status-production {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+}
+
+/* Environment Badge */
+.environment-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 2px solid;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.environment-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.environment-badge .env-icon {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.environment-badge .env-details {
+    flex: 1;
+}
+
+.environment-badge .env-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+}
+
+.environment-badge .env-description {
+    font-size: 12px;
+    line-height: 1.4;
+    opacity: 0.85;
+}
+
+/* Development Environment Badge */
+.environment-badge.env-development {
+    border-color: #0d6efd;
+    background: linear-gradient(135deg, #e7f1ff 0%, #cfe2ff 100%);
+}
+
+.environment-badge.env-development .env-title {
+    color: #084298;
+}
+
+.environment-badge.env-development .env-description {
+    color: #052c65;
+}
+
+/* Production Environment Badge */
+.environment-badge.env-production {
+    border-color: #198754;
+    background: linear-gradient(135deg, #d1e7dd 0%, #a3cfbb 100%);
+}
+
+.environment-badge.env-production .env-title {
+    color: #0f5132;
+}
+
+.environment-badge.env-production .env-description {
+    color: #0a3622;
+}
+
 .version-features {
     margin: 0;
     padding-left: 20px;

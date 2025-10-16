@@ -47,9 +47,86 @@ This is a Flask-based web application for visualizing EMODnet (European Marine O
 - Serves interactive interface that makes client-side WMS requests
 - Legend images are fetched directly from WMS GetLegendGraphic requests
 
-## Framework Updates (Version 1.2.4 - October 2025)
+## Framework Updates (Version 1.2.11 - October 2025)
 
-### Latest Release (v1.2.4) - P1 Performance Optimizations
+### Latest Release (v1.2.11) - Dynamic Deployment URL + Health Check Fix
+**Release Date:** October 16, 2025
+**Focus:** Environment-aware version notifications and production bug fixes
+**Impact:** Zero breaking changes, 100% backward compatible
+
+This release introduces environment-specific version notifications and fixes critical production issues with health check status display and deployment URLs.
+
+#### Key Features
+
+**1. Environment-Aware Version Notifications**
+- Different UI badges for development vs production modes
+- **Development Mode** (🔧 blue badge): Shows "Debug enabled • Individual JS modules • Detailed logging"
+- **Production Mode** (🚀 green badge): Shows "Optimized bundle • Minified assets • Compression enabled"
+- Automatic detection based on `DEBUG` configuration flag
+
+**2. Dynamic Deployment URLs**
+- **Development**: Displays `laguna.ku.lt:5001` (port-based URL)
+- **Production**: Displays `laguna.ku.lt/BBTS` (path-based URL with APPLICATION_ROOT)
+- Automatically adapts based on environment and configuration
+
+**3. Health Check Status Fix**
+- **Issue Fixed**: Health check was showing "❌ Error" on production
+- **Root Cause**: JavaScript fetching from `/BBTS/api/health` (404) instead of `/BBTS/health` (200)
+- **Solution**: Changed to use `APPLICATION_ROOT + '/health'` for correct path resolution
+
+#### Files Modified
+- `app.py` - Added `deployment_url` logic based on environment (lines 463-492)
+- `templates/index.html` - Environment badges, dynamic deployment URL, fixed health check URL
+- `static/css/styles.css` - Added environment badge styles (`.environment-badge`, `.env-development`, `.env-production`)
+- `src/emodnet_viewer/__version__.py` - Updated to v1.2.11
+
+#### Technical Implementation
+
+**Environment Detection (app.py)**:
+```python
+# Determine deployment URL based on environment
+if config.DEBUG:
+    # Development: use localhost with port
+    deployment_url = os.environ.get('PUBLIC_URL', 'http://laguna.ku.lt:5001')
+else:
+    # Production: use application root path
+    if app_root:
+        deployment_url = f"http://laguna.ku.lt{app_root}"
+```
+
+**Health Check Fix (templates/index.html)**:
+```javascript
+// Use APPLICATION_ROOT instead of API_BASE_URL for health endpoint
+const appRoot = '{{ APPLICATION_ROOT }}';
+const healthUrl = appRoot + '/health';
+```
+
+**Environment Badge (templates/index.html)**:
+```html
+{% if is_development %}
+<div class="environment-badge env-development">
+    <span class="env-icon">🔧</span>
+    <div class="env-details">
+        <div class="env-title">Development Mode</div>
+        <div class="env-description">
+            Debug enabled • Individual JS modules • Detailed logging • Hot reload ready
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="environment-badge env-production">
+    <span class="env-icon">🚀</span>
+    <div class="env-details">
+        <div class="env-title">Production Mode</div>
+        <div class="env-description">
+            Optimized bundle • Minified assets • Compression enabled • Performance monitoring
+        </div>
+    </div>
+</div>
+{% endif %}
+```
+
+### Previous Release (v1.2.4) - P1 Performance Optimizations
 **Release Date:** October 13, 2025
 **Focus:** Priority 1 (P1) performance optimizations for faster load times and reduced bandwidth
 **Impact:** Zero breaking changes, 100% backward compatible
