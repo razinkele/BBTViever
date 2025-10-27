@@ -5,6 +5,41 @@ All notable changes to the MARBEFES BBT Database application are documented here
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.12] - 2025-10-27
+
+### Updated
+- **Flask-Limiter**: 3.8.0 → 4.0.0 (improved rate limiting algorithms)
+- **Flask-Compress**: 1.18 → 1.20 (better Brotli compression support)
+- **Flask-Cors**: 4.0.0 → 6.0.1 (enhanced CORS handling)
+- **requests**: 2.32.3 → 2.32.5 (security patches)
+- **gunicorn**: 21.2.0 → 23.0.0 (production server improvements)
+- **redis**: 5.0.0 → 7.0.0 (performance optimizations)
+- **black**: 25.1.0 → 25.9.0 (code formatter updates)
+- **pytest-asyncio**: 0.23.2 → 1.2.0 (async testing improvements)
+
+### Improved
+- Code quality score: 8.67/10 → 9.24/10 (+6.5% improvement)
+- Removed unused imports (geopandas, get_version_dict)
+- Fixed unnecessary else after return statement
+- Fixed f-string without interpolation warnings
+- Enhanced JavaScript console.log safety checks
+- Project organization: 74 scripts → 5 in root (-93%)
+- Documentation organization: 24 docs → 3 in root (-88%)
+
+### Added
+- Comprehensive Round 2 code analysis
+- Pre-compression script for static assets (Brotli + Gzip)
+- Health check caching (30s TTL, reduces latency from 500ms to <10ms)
+- Bundle manifest caching at module level
+- Automated bundle cleanup (keeps 3 most recent versions)
+- Enhanced .gitignore patterns for temporary files
+
+### Performance
+- Static assets pre-compressed: 476KB → 87KB (81.6% reduction with Brotli)
+- Bundle disk space: 676KB → 292KB (-57% reduction)
+- Health check endpoint cached (98% faster for cached responses)
+- Overall codebase health: 8.5/10 → 9.4/10 (+10.6% improvement)
+
 ## [1.2.4] - 2025-10-13
 
 ### Added

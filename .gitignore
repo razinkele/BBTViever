@@ -33,6 +33,8 @@ venv.bak/
 .env
 .env.local
 .env.production
+.env.*.fixed
+.env.*.backup
 
 # IDE
 .vscode/
@@ -94,3 +96,17 @@ package-lock.json
 # static/dist/app.bundle.js
 # static/dist/app.bundle.min.js
 # static/dist/app.bundle.min.js.map
+
+# Temporary/one-time fix scripts (moved to scripts/archive/)
+fix_*.sh
+deploy_v*.sh
+complete_*.sh
+apply_*.sh
+DEPLOY_NOW.sh
+
+# Temporary documentation (moved to docs/archive/)
+*_FIX_*.md
+*_CHECKLIST.md
+*_INSTRUCTIONS.md
+REFACTORING_*.md
+COMPREHENSIVE_AUDIT_*.md

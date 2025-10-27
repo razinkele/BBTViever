@@ -1,41 +1,32 @@
-#!/usr/bin/env python3
 """
-Gunicorn configuration for MARBEFES BBT Database
-Deployed at: http://laguna.ku.lt/BBTS/
+Gunicorn configuration file for MARBEFES BBT Database production deployment
 
-Optimized configuration with:
-- Environment-based scaling (auto-scaled based on CPU cores)
-- Production security settings (localhost bind - nginx reverse proxy handles external access)
-- Performance tuning for WMS/HELCOM requests (120s timeout)
-- 2-tier caching for vector layers
-- Connection pooling for WMS services
+This configuration optimizes the application for production use with:
+- Multiple worker processes for concurrent request handling
+- Appropriate timeouts for WMS requests
+- Access logging and error logging
+- Security settings
 
 Usage:
     gunicorn -c gunicorn_config.py app:app
 """
 
-import os
 import multiprocessing
+import os
 
-# Server socket - bind to localhost only (nginx reverse proxy handles external access)
-# Use GUNICORN_BIND env var to override (e.g., for development: GUNICORN_BIND=0.0.0.0:5000)
-bind = os.getenv('GUNICORN_BIND', f"127.0.0.1:{os.getenv('PORT', '5000')}")
+# Server Socket
+bind = os.getenv('GUNICORN_BIND', '0.0.0.0:5000')
 backlog = 2048
 
-# Worker processes - optimized for I/O bound WMS requests
+# Worker Processes
 # Rule of thumb: (2 x $num_cores) + 1
-workers = int(os.getenv('WORKERS', os.getenv('GUNICORN_WORKERS', multiprocessing.cpu_count() * 2 + 1)))
-worker_class = 'sync'
+workers = int(os.getenv('GUNICORN_WORKERS', multiprocessing.cpu_count() * 2 + 1))
+worker_class = 'sync'  # Use 'gevent' or 'eventlet' for async if needed
 worker_connections = 1000
-
-# Restart workers to prevent memory leaks
-max_requests = int(os.getenv('MAX_REQUESTS', '1000'))
-max_requests_jitter = int(os.getenv('MAX_REQUESTS_JITTER', '100'))
-
-# Timeouts - increased for WMS GetCapabilities requests
-timeout = int(os.getenv('TIMEOUT', '120'))  # Increased from 30s for WMS operations
-graceful_timeout = int(os.getenv('GRACEFUL_TIMEOUT', '30'))
-keepalive = int(os.getenv('KEEPALIVE', '5'))
+max_requests = 1000  # Restart workers after this many requests (prevents memory leaks)
+max_requests_jitter = 50  # Add randomness to prevent all workers restarting simultaneously
+timeout = 30  # Worker timeout (seconds) - important for WMS requests
+keepalive = 5  # Seconds to wait for requests on a Keep-Alive connection
 
 # Logging
 accesslog = os.getenv('GUNICORN_ACCESS_LOG', 'logs/gunicorn_access.log')

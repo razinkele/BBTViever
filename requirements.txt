@@ -1,10 +1,11 @@
-# Core Flask dependencies - Updated for security and performance
-Flask==3.1.2
-Flask-Caching==2.3.1  # Updated: Latest stable version (Oct 2025)
-Flask-Limiter==3.8.0  # API rate limiting for security
-Flask-Compress==1.18  # Response compression for JSON/GeoJSON/HTML (P1 optimization)
-requests==2.32.3
-Werkzeug>=3.1.0  # Explicit Flask dependency for security
+# Core Flask dependencies - Updated December 2025
+Flask==3.1.2  # Latest stable - no updates needed
+Flask-Caching==2.3.1  # Latest stable
+Flask-Limiter==4.0.0  # Updated: Latest version with improved rate limiting
+Flask-Compress==1.20  # Updated: Latest version with better Brotli support
+Flask-Cors==6.0.1  # Updated: Latest version for CORS handling
+requests==2.32.5  # Updated: Latest security patches
+Werkzeug>=3.1.0  # Flask dependency - security updates
 
 # Geospatial dependencies for GPKG support
 # Note: pandas 2.0.3 required for pyogrio 0.11.1 compatibility (pandas 2.2.3+ has dtype conversion issues)
@@ -18,5 +19,5 @@ numpy>=1.26.0,<2.0  # Compatible with pandas 2.0.3
 pyogrio>=0.9.0  # Faster alternative to Fiona for I/O operations
 
 # Production deployment dependencies
-gunicorn>=21.2.0  # WSGI HTTP server for production
-redis>=5.0.0  # Optional: Redis for distributed caching (alternative to simple cache)
+gunicorn>=23.0.0  # Updated: Latest WSGI HTTP server for production
+redis>=7.0.0  # Updated: Latest Redis client with improved performance

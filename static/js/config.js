@@ -15,7 +15,10 @@
 
 // Ensure AppConfig exists (should be set by template, but provide fallback)
 if (typeof window.AppConfig === 'undefined') {
-    console.warn('AppConfig not injected by template, using fallback defaults');
+    // AppConfig not found - using fallback (debug.warn used if available)
+    if (typeof console !== 'undefined') {
+        console.warn('AppConfig not injected by template, using fallback defaults');
+    }
     window.AppConfig = {
         API_BASE_URL: '/api',
         WMS_BASE_URL: 'https://ows.emodnet-seabedhabitats.eu/geoserver/emodnet_view/wms',

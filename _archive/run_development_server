@@ -1,0 +1,33 @@
+FLASK_HOST=0.0.0.0 FLASK_RUN_PORT=5001 python app.py
+Managing the Development Server
+
+  View server logs in real-time:
+  tail -f /tmp/marbefes-dev.log
+
+  Stop the development server:
+  pkill -f "python.*app.py"
+
+  Restart with the script:
+  cd ~/OneDrive/HORIZON_EUROPE/MARBEFES/EMODNET_PyDeck
+  ./start_dev_server.sh
+
+  Quick Reference Files Created
+
+  1. start_dev_server.sh - Interactive script to start the dev server
+  2. DEV_SERVER_INSTRUCTIONS.md - Complete manual with all commands
+
+Production Server Issues (Still Unresolved)
+
+  The production server at http://laguna.ku.lt/BBTS still has issues:
+  1. ❌ Static files not loading (CSS, JS, images)
+  2. ❌ Too many workers (58 instead of ~8)
+  3. ❌ 96MB error log file
+
+  The nginx errors show it's looking for files at /usr/share/nginx/html/static/ when they're actually at
+  /var/www/marbefes-bbt/static/.
+
+  To access your application now, use the development server:
+  http://laguna.ku.lt:5001
+
+  This bypasses all nginx complexity and gives you a fully functional application with all styling and JavaScript
+  working correctly!
