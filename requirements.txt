@@ -1,0 +1,43 @@
+# MARBEFES BBT Database - Dependencies
+# Core Flask dependencies
+Flask==2.3.3
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+
+# Web server
+gunicorn==21.2.0
+
+# HTTP client
+requests==2.31.0
+
+# Geospatial libraries (optional, for vector support)
+geopandas==0.14.0
+fiona==1.9.4
+pyproj==3.6.1
+shapely==2.0.2
+
+# Caching (optional)
+redis==5.0.0
+flask-caching==2.0.2
+
+# Security
+python-dotenv==1.0.0
+
+# Logging
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.2
+pytest-flask==1.2.0
+pytest-cov==4.1.0
+
+# Development
+black==23.9.1
+flake8==6.1.0
+mypy==1.5.1
+
+# Performance monitoring (optional)
+prometheus-flask-exporter==0.22.4
+
+# Rate limiting
+flask-limiter==3.5.0

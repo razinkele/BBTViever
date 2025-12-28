@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARBEFES BBT Database</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c5aa0, #1e88e5);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .api-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2c5aa0;
+        }
+        .endpoint {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.working {
+            background: #d4edda;
+            color: #155724;
+        }
+        .layer-info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MARBEFES BBT Database</h1>
+        <p>Marine Biodiversity and Ecosystem Functioning Database</p>
+        <p>EMODnet Seabed Habitats - EUSeaMap Layers</p>
+    </div>
+
+    <div class="content">
+        <h2>API Endpoints</h2>
+        <div class="api-section">
+            <h3>Layer Information</h3>
+            <div class="endpoint">
+                <strong>GET</strong> /api/layers
+                <span class="status working">✓ Working</span>
+                <br><small>Returns all available EUSeaMap layers (45 layers)</small>
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /api/all-layers
+                <span class="status working">✓ Working</span>
+                <br><small>Returns comprehensive layer information including WMS and HELCOM</small>
+            </div>
+            <div class="endpoint">
+                <strong>GET</strong> /api/capabilities
+                <span class="status working">✓ Working</span>
+                <br><small>Returns WMS GetCapabilities document</small>
+            </div>
+        </div>
+
+        <div class="layer-info">
+            <h3>Current Configuration</h3>
+            <ul>
+                <li><strong>Data Source:</strong> EMODnet Seabed Habitats</li>
+                <li><strong>Filter:</strong> EUSeaMap layers only (layers starting with 'eusm')</li>
+                <li><strong>Total Layers:</strong> 45 EUSeaMap layers from 271 total available</li>
+                <li><strong>Layer Types:</strong> Biological zones, Substrate types, Energy classes, EUNIS classifications</li>
+                <li><strong>Years:</strong> EUSeaMap 2019, 2023</li>
+            </ul>
+        </div>
+
+        <div class="api-section">
+            <h3>Layer Operations</h3>
+            <div class="endpoint">
+                <strong>GET</strong> /api/legend/&lt;layer_name&gt;
+                <br><small>Get legend URL for a specific layer</small>
+            </div>
+            <div class="endpoint">
+                <strong>POST</strong> /api/feature-info
+                <br><small>Get feature information for a specific location</small>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>Example Usage</h3>
+            <pre style="background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 5px; overflow-x: auto;">
+# Get all EUSeaMap layers
+curl http://localhost:5000/api/layers
+
+# Get comprehensive layer information
+curl http://localhost:5000/api/all-layers
+
+# Get WMS capabilities
+curl http://localhost:5000/api/capabilities
+            </pre>
+        </div>
+    </div>
+</body>
+</html>
